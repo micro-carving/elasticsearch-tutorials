@@ -1,0 +1,11 @@
+### 验证 ES
+GET {{baseUrl}}
+
+### 创建 shopping 索引
+PUT {{baseUrl}}/shopping
+
+### 查询所有索引
+GET {{baseUrl}}/_cat/indices?v
+
+### 查看单个索引
+GET {{baseUrl}}/shopping
