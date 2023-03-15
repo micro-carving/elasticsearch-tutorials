@@ -1,0 +1,63 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+
+    <groupId>com.olinonee.elasticsearch</groupId>
+    <artifactId>elasticsearch-tutorials-parent</artifactId>
+    <packaging>pom</packaging>
+    <version>${revision}</version>
+    <description>ES 父级 pom 模块，统一管理项目的版本依赖以及插件版本</description>
+    <modules>
+        <module>elasticsearch-api</module>
+        <module>elasticsearch-common</module>
+        <module>elasticsearch-service</module>
+    </modules>
+
+    <properties>
+        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+        <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
+
+        <maven.compiler.source>11</maven.compiler.source>
+        <maven.compiler.target>11</maven.compiler.target>
+
+        <!-- 项目统一修订版本 -->
+        <revision>1.0.1</revision>
+
+        <!-- 项目依赖管理 -->
+        <spring.boot.version>2.7.8</spring.boot.version>
+        <elasticsearch.java.version>7.17.9</elasticsearch.java.version>
+        <jackson.databind.version>2.12.3</jackson.databind.version>
+    </properties>
+
+    <dependencyManagement>
+        <dependencies>
+            <dependency>
+                <groupId>org.springframework.boot</groupId>
+                <artifactId>spring-boot-dependencies</artifactId>
+                <version>${spring.boot.version}</version>
+                <type>pom</type>
+                <scope>import</scope>
+            </dependency>
+
+            <!-- elasticsearch-java sdk 依赖-->
+            <!-- https://www.elastic.co/guide/en/elasticsearch/client/java-api-client/7.17/installation.html -->
+            <dependency>
+                <groupId>co.elastic.clients</groupId>
+                <artifactId>elasticsearch-java</artifactId>
+                <version>${elasticsearch.java.version}</version>
+                <type>pom</type>
+                <scope>import</scope>
+            </dependency>
+
+            <dependency>
+                <groupId>com.fasterxml.jackson.core</groupId>
+                <artifactId>jackson-databind</artifactId>
+                <version>${jackson.databind.version}</version>
+                <type>pom</type>
+                <scope>import</scope>
+            </dependency>
+        </dependencies>
+    </dependencyManagement>
+</project>
