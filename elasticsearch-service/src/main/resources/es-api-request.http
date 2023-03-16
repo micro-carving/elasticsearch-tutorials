@@ -9,3 +9,63 @@ GET {{baseUrl}}/_cat/indices?v
 
 ### 查看单个索引
 GET {{baseUrl}}/shopping
+
+### 删除单个索引
+DELETE {{baseUrl}}/shopping
+
+### 创建文档（此方式不能使用 PUT；自动生成唯一标识，可以指定，比如：xxx/shopping/_doc/1，此方式可以使用 PUT）
+POST {{baseUrl}}/shopping/_doc
+Content-Type: application/json
+
+{
+  "title": "小米手机",
+  "category": "小米",
+  "images": "http://www.gulixueyuan.com/xm.jpg",
+  "price": 3999.00
+}
+
+### 新增文档（当指定唯一标识时可以使用 PUT）
+PUT {{baseUrl}}/shopping/_doc/2
+Content-Type: application/json
+
+{
+  "title": "华为手机",
+  "category": "华为",
+  "images": "http://www.gulixueyuan.com/hw.jpg",
+  "price": 4999.00
+}
+
+### 查询文档（全查询）
+GET {{baseUrl}}/shopping/_search
+
+### 查询文档（主键查询）
+GET {{baseUrl}}/shopping/_doc/1
+
+### 查询文档（主键查询，查询不存在主键）
+GET {{baseUrl}}/shopping/_doc/1001
+
+### 修改文档（全量修改）
+PUT {{baseUrl}}/shopping/_doc/1
+Content-Type: application/json
+
+{
+  "title": "华为手机",
+  "category": "华为",
+  "images": "http://www.gulixueyuan.com/hw.jpg",
+  "price": 4999.00
+}
+
+### 修改文档（局部修改）
+POST {{baseUrl}}/shopping/_update/1
+Content-Type: application/json
+
+{
+  "doc": {
+    "title": "荣耀手机",
+    "category": "华为",
+    "price": 1999.00
+  }
+}
+
+### 删除文档（逻辑删除）
+DELETE {{baseUrl}}/shopping/_doc/1

@@ -78,7 +78,7 @@ GET {{baseUrl}}
 
 # ElasticSearch 入门
 
-## 文档索引
+## 索引
 
 正排索引（传统）
 
@@ -149,6 +149,7 @@ grep : 无法将“grep”项识别为 cmdlet、函数、脚本文件或可运�
 出现上述错误，可以尝试安装 `grep` ，安装参考链接：https://www.cnblogs.com/shenxiaolin/p/16662793.html
 
 ### 查询索引
+
 #### 查询所有索引
 
 向 ES 服务器发 GET 请求：`http://127.0.0.1:9200/_cat/indices?v`
@@ -222,6 +223,441 @@ GET {{baseUrl}}/shopping
   }
 }
 ```
+
+### 删除单个索引
+
+向 ES 服务器发 DELETE 请求：`http://127.0.0.1:9200/shopping`
+
+```http request
+### 删除单个索引
+DELETE {{baseUrl}}/shopping
+```
+
+服务器响应结果如下：
+
+```text
+{
+  "acknowledged": true
+}
+```
+
+再次查看所有索引，`GET http://127.0.0.1:9200/_cat/indices?v` ，返回结果如下：
+
+```text
+health status index                           uuid                   pri rep docs.count docs.deleted store.size pri.store.size
+green  open   .geoip_databases                m_2rhbeoQQW9xGX2rmdCfA   1   0         42            0     40.7mb         40.7mb
+green  open   .apm-custom-link                n-W9098GR0-wGpEt5tvuhA   1   0          0            0       226b           226b
+green  open   .kibana_7.17.9_001              g-Qu0wiyRNeHqK_y-W9-sw   1   0        627           12      2.4mb          2.4mb
+green  open   .apm-agent-configuration        8ewjD7bCSZCKu5m7SycxkQ   1   0          0            0       226b           226b
+green  open   .kibana_task_manager_7.17.9_001 EugcrviHQaKXRPEBd40Qog   1   0         17        38303      4.1mb          4.1mb
+green  open   .tasks                          fxZ7WSS9Q_qznYoHcR22VQ   1   0          2            0     13.9kb         13.9kb
+```
+
+根据结果看出 `shopping` 索引已经不存在，说明成功！
+
+## 文档
+
+### 创建文档
+
+这里的文档可以类比为关系型数据库中的表数据，添加的数据格式为 **JSON** 格式。
+
+向 ES 服务器发 POST 请求：`http://127.0.0.1:9200/shopping/_doc` ，请求体 JSON 内容为：
+
+```json
+{
+  "title": "小米手机",
+  "category": "小米",
+  "images": "http://www.gulixueyuan.com/xm.jpg",
+  "price": 3999.00
+}
+```
+
+```http request
+### 创建文档（此方式不能使用 PUT；自动生成唯一标识，可以指定，比如：xxx/shopping/_doc/1，此方式可以使用 PUT）
+POST {{baseUrl}}/shopping/_doc
+Content-Type: application/json
+
+{
+  "title":"小米手机",
+  "category":"小米",
+  "images":"http://www.gulixueyuan.com/xm.jpg",
+  "price":3999.00
+}
+```
+
+注意，此处发送请求的方式必须为 POST，不能是 PUT，否则会发生错误，提示的错误如下所示：
+
+```text
+{
+  "error": "Incorrect HTTP method for uri [/shopping/_doc] and method [PUT], allowed: [POST]",
+  "status": 405
+}
+```
+
+自定义唯一标识这种请求可以使用 PUT，如下所示：
+
+```http request
+### 新增文档（当指定唯一标识时可以使用 PUT）
+PUT {{baseUrl}}/shopping/_doc/2
+Content-Type: application/json
+
+{
+  "title":"华为手机",
+  "category":"华为",
+  "images":"http://www.gulixueyuan.com/hw.jpg",
+  "price":4999.00
+}
+```
+
+服务器响应结果如下：
+
+```text
+{
+  "_index": "shopping", // 索引
+  "_type": "_doc",      // 类型 - 文档
+  "_id": "t1eX6IYB1yjqbUaozmwa", // 唯一标识，可以类比为 MySQL 中的主键，随机生成
+  "_version": 1,    // 版本
+  "result": "created", // 结果，这里的 created 表示创建成功
+  "_shards": {      // 分片
+    "total": 2,     // 分片 - 总数
+    "successful": 1, // 分片 - 成功数
+    "failed": 0 // 分片 - 失败数
+  },
+  "_seq_no": 0, 
+  "_primary_term": 1
+}
+```
+
+上面的数据创建后，由于没有指定数据唯一性标识（ID），默认情况下， ES 服务器会随机生成一个。
+
+如果想要自定义唯一性标识，需要在创建时指定：`http://127.0.0.1:9200/shopping/_doc/1` 。
+
+**注意**：
+
+**如果增加数据时明确数据主键，那么请求方式除了使用 POST 以外，也可以为 PUT**。
+
+### 查询文档
+
+#### 全查询
+
+查看索引下所有数据，向 ES 服务器发 GET 请求：`http://127.0.0.1:9200/shopping/_search`
+
+```http request
+### 查询文档（全查询）
+GET {{baseUrl}}/shopping/_search
+```
+
+服务器响应结果如下：
+
+```text
+{
+  "took": 9,
+  "timed_out": false,
+  "_shards": {
+    "total": 1,
+    "successful": 1,
+    "skipped": 0,
+    "failed": 0
+  },
+  "hits": {
+    "total": {
+      "value": 2,
+      "relation": "eq"
+    },
+    "max_score": 1.0,
+    "hits": [
+      {
+        "_index": "shopping",
+        "_type": "_doc",
+        "_id": "t1eX6IYB1yjqbUaozmwa",
+        "_score": 1.0,
+        "_source": {
+          "title": "小米手机",
+          "category": "小米",
+          "images": "http://www.gulixueyuan.com/xm.jpg",
+          "price": 3999.00
+        }
+      },
+      {
+        "_index": "shopping",
+        "_type": "_doc",
+        "_id": "1",
+        "_score": 1.0,
+        "_source": {
+          "title": "华为手机",
+          "category": "华为",
+          "images": "http://www.gulixueyuan.com/hw.jpg",
+          "price": 4999.00
+        }
+      }
+    ]
+  }
+}
+```
+
+#### 主键查询
+
+查询文档时，需要指明文档的唯一性标识，类似于 MySQL 中数据的主键查询。
+
+向 ES 服务器发 GET 请求：`http://127.0.0.1:9200/shopping/_doc/1`
+
+```http request
+### 查询文档（主键查询）
+GET {{baseUrl}}/shopping/_doc/1
+```
+
+服务器响应结果如下：
+
+```text
+{
+  "_index": "shopping",
+  "_type": "_doc",
+  "_id": "1",
+  "_version": 5,
+  "_seq_no": 9,
+  "_primary_term": 1,
+  "found": true,
+  "_source": {
+    "title": "华为手机",
+    "category": "华为",
+    "images": "http://www.gulixueyuan.com/hw.jpg",
+    "price": 4999.00
+  }
+}
+```
+
+查找不存在的内容，向 ES 服务器发 GET 请求：`http://127.0.0.1:9200/shopping/_doc/1001`
+
+服务器响应结果如下：
+
+```text
+{
+  "_index": "shopping",
+  "_type": "_doc",
+  "_id": "1001",
+  "found": false    // 为 false 表示未查询到
+}
+```
+
+### 修改文档
+
+#### 全量修改
+
+和创建文档一样，输入相同的 URL 地址请求，如果请求体变化，会将原有的数据内容覆盖。
+
+向 ES 服务器发 POST 请求：`http://127.0.0.1:9200/shopping/_doc/1` ，请求体 JSON 内容为：
+
+```json
+{
+  "title": "华为手机",
+  "category": "华为",
+  "images": "http://www.gulixueyuan.com/hw.jpg",
+  "price": 4999.00
+}
+```
+
+```http request
+### 修改文档（全量修改）
+PUT {{baseUrl}}/shopping/_doc/1
+Content-Type: application/json
+
+{
+  "title": "华为手机",
+  "category": "华为",
+  "images": "http://www.gulixueyuan.com/hw.jpg",
+  "price": 4999.00
+}
+```
+
+服务器响应结果如下：
+
+```text
+{
+  "_index": "shopping",
+  "_type": "_doc",
+  "_id": "1",
+  "_version": 2,       // 版本号，每次改变都 + 1
+  "result": "updated", // 结果，这里的 updated 表示修改成功
+  "_shards": {
+    "total": 2,
+    "successful": 1,
+    "failed": 0
+  },
+  "_seq_no": 5,
+  "_primary_term": 1
+}
+```
+
+#### 局部修改
+
+修改数据时，也可以只修改某一给条数据的局部信息。
+
+向 ES 服务器发 POST 请求：`http://127.0.0.1:9200/shopping/_update/1` ，请求体 JSON 内容为：
+
+```http request
+### 修改文档（局部修改）
+POST {{baseUrl}}/shopping/_update/1
+Content-Type: application/json
+
+{
+  "doc": {
+    "title": "荣耀手机",
+    "category": "华为",
+    "price": 1999.00
+  }
+}
+```
+
+**注意**：
+
+**全量修改既可以使用 POST 方式，也可以使用 PUT 方式；局部修改只能使用 POST 方式，不能使用 PUT 方式**。
+
+服务器响应结果如下：
+
+```text
+{
+  "_index": "shopping",
+  "_type": "_doc",
+  "_id": "1",
+  "_version": 3,
+  "result": "updated",
+  "_shards": {
+    "total": 2,
+    "successful": 1,
+    "failed": 0
+  },
+  "_seq_no": 10,
+  "_primary_term": 1
+}
+```
+
+向 ES 服务器发 GET 请求：`http://127.0.0.1:9200/shopping/_doc/1` ，查看修改内容：
+
+```text
+{
+  "_index": "shopping",
+  "_type": "_doc",
+  "_id": "1",
+  "_version": 16,
+  "_seq_no": 20,
+  "_primary_term": 1,
+  "found": true,
+  "_source": {
+    "title": "荣耀手机",
+    "category": "华为",
+    "images": "http://www.gulixueyuan.com/hw.jpg",
+    "price": 1999.0
+  }
+}
+```
+
+### 删除文档
+
+删除一个文档不会立即从磁盘上移除，它只是被标记成已删除（逻辑删除）。
+
+向 ES 服务器发 DELETE 请求：`http://127.0.0.1:9200/shopping/_doc/1`
+
+```http request
+### 删除文档（逻辑删除）
+DELETE {{baseUrl}}/shopping/_doc/1
+```
+
+服务器响应结果如下：
+
+```text
+{
+  "_index": "shopping",
+  "_type": "_doc",
+  "_id": "1",
+  "_version": 4,
+  "result": "deleted", // 结果，这里的 deleted 表示删除成功，这里是逻辑删除
+  "_shards": {
+    "total": 2,
+    "successful": 1,
+    "failed": 0
+  },
+  "_seq_no": 21,
+  "_primary_term": 1
+}
+```
+
+向 ES 服务器发 GET 请求：`http://127.0.0.1:9200/shopping/_doc/1` ，查看是否删除成功：
+
+```text
+{
+  "_index": "shopping",
+  "_type": "_doc",
+  "_id": "1",
+  "found": false
+}
+```
+
+### 批量操作文档
+
+提到批量操作文档，我们需要使用到 `bulk` **批量增删改**的操作
+API。官方说明：[docs-bulk](https://www.elastic.co/guide/en/elasticsearch/reference/7.17/docs-bulk.html)
+
+1. 语法
+
+`bulk` 对 JSON 串的有着严格的要求。**每个 JSON 串不能换行，只能放在同一行**。同时，**相邻的 JSON 串之间必须要有换行**（Linux 下是 `\n`；Window 下是 `\r\n`）。bulk
+的每个操作必须要一对 JSON 串（delete 语法除外）。
+
+```text
+action_and_meta_data\n
+optional_source\n
+action_and_meta_data\n
+optional_source\n
+....
+action_and_meta_data\n
+optional_source\n
+```
+
+**注意**：
+
+最后一行数据必须以换行符 `\n` 结束。每个换行符前可以加回车 `\r`。将 `NDJSON` 数据发送到 `_bulk` 端点时，请使用 `application/json` 或 `application/x-ndjson`
+的 `Content-Type` 标头。
+
+2. 操作类型
+
+- `create` 如果文档不存在就创建，但如果文档存在就返回错误；
+- `index` 如果文档不存在就创建，如果文档存在就更新；
+- `update` 更新一个文档，如果文档不存在就返回错误；
+- `delete` 删除一个文档，如果要删除的文档id不存在，就返回错误。
+
+其实可以看得出来 index 是比较常用的。还有 bulk 的操作，某一个操作失败，是不会影响其他文档的操作的，它会在返回结果中告诉你失败的详细的原因。
+
+3. 操作工具
+
+关于批量操作，我这里选择使用 kibana 的 `dev_tools`
+终端控制台来操作（下同），在线测试地址：[http://localhost:5601/app/dev_tools#/console](http://localhost:5601/app/dev_tools#/console)
+
+由于 idea 中的 HTTP Request 插件没有找到方法进行测试批量操作，这里主要采用 kibana 的 `dev_tools`，或者使用 Apifox 工具进行测试。
+
+如下图所示：
+
+![kibana的dev_tools控制台测试bulk新增文档数据](./assets/kibana的dev_tools控制台测试bulk新增文档数据.png)
+
+![Apifox测试bulk新增文档数据](./assets/Apifox测试bulk新增文档数据.png)
+
+4. 官方测试集
+
+测试集地址：[https://download.elastic.co/demos/kibana/gettingstarted/accounts.zip](https://download.elastic.co/demos/kibana/gettingstarted/accounts.zip)
+
+### 批量插入
+
+```text
+POST /shopping/_bulk
+{"index": {"_id": 1}}
+{"title": "小米手机", "category": "小米", "images": "http://www.gulixueyuan.com/xm.jpg", "price": 2999.00}
+{"index": {"_id": 2}}
+{"title": "红米手机", "category": "小米", "images": "http://www.gulixueyuan.com/xm.jpg", "price": 1999.00}
+{"index": {"_id": 3}}
+{"title": "华为手机", "category": "华为", "images": "http://www.gulixueyuan.com/hw.jpg", "price": 4999.00}
+{"index": {"_id": 4}}
+{"title": "荣耀手机", "category": "华为", "images": "http://www.gulixueyuan.com/hw.jpg", "price": 1999.00}
+```
+
+![kibana的dev_tools控制台测试bulk新增文档数据](./assets/kibana的dev_tools控制台测试bulk新增文档数据.png)
 
 # ElasticSearch 进阶
 
