@@ -626,7 +626,41 @@ optional_source\n
 
 其实可以看得出来 index 是比较常用的。还有 bulk 的操作，某一个操作失败，是不会影响其他文档的操作的，它会在返回结果中告诉你失败的详细的原因。
 
-3. 操作工具
+3. 操作请求
+
+请求方式
+
+- `POST /_bulk`
+
+如果使用此方式，需要在元数据中指定索引，也就是 `"_index": "index_name"`，如下所示：
+
+```text
+POST _bulk
+{ "index" : { "_index" : "test", "_id" : "1" } }
+{ "field1" : "value1" }
+{ "delete" : { "_index" : "test", "_id" : "2" } }
+{ "create" : { "_index" : "test", "_id" : "3" } }
+{ "field1" : "value3" }
+{ "update" : {"_id" : "1", "_index" : "test"} }
+{ "doc" : {"field2" : "value2"} }
+```
+
+- `POST /<target>/_bulk`
+
+如果使用此方式，不需要在元数据中指定索引，也就是 `target` 处为索引，所以不需要指定，如下所示：
+
+```text
+POST /index_name/_bulk
+{ "index" : {"_id" : "1" } }
+{ "field1" : "value1" }
+{ "delete" : { "_id" : "2" } }
+{ "create" : {"_id" : "3" } }
+{ "field1" : "value3" }
+{ "update" : {"_id" : "1"} }
+{ "doc" : {"field2" : "value2"} }
+```
+
+4. 操作工具
 
 关于批量操作，我这里选择使用 kibana 的 `dev_tools`
 终端控制台来操作（下同），在线测试地址：[http://localhost:5601/app/dev_tools#/console](http://localhost:5601/app/dev_tools#/console)
@@ -643,7 +677,9 @@ optional_source\n
 
 测试集地址：[https://download.elastic.co/demos/kibana/gettingstarted/accounts.zip](https://download.elastic.co/demos/kibana/gettingstarted/accounts.zip)
 
-### 批量插入
+### 批量新增
+
+新增的 `action` 为 `index` 或者 `create`，这里选择 `index` 。
 
 ```text
 POST /shopping/_bulk
@@ -657,7 +693,353 @@ POST /shopping/_bulk
 {"title": "荣耀手机", "category": "华为", "images": "http://www.gulixueyuan.com/hw.jpg", "price": 1999.00}
 ```
 
-![kibana的dev_tools控制台测试bulk新增文档数据](./assets/kibana的dev_tools控制台测试bulk新增文档数据.png)
+服务器响应结果如下：
+
+```json
+{
+  "took": 6,
+  "errors": false,
+  "items": [
+    {
+      "index": {
+        "_index": "shopping",
+        "_type": "_doc",
+        "_id": "1",
+        "_version": 1,
+        "result": "created",
+        "_shards": {
+          "total": 2,
+          "successful": 1,
+          "failed": 0
+        },
+        "_seq_no": 37,
+        "_primary_term": 1,
+        "status": 201
+      }
+    },
+    {
+      "index": {
+        "_index": "shopping",
+        "_type": "_doc",
+        "_id": "2",
+        "_version": 1,
+        "result": "created",
+        "_shards": {
+          "total": 2,
+          "successful": 1,
+          "failed": 0
+        },
+        "_seq_no": 38,
+        "_primary_term": 1,
+        "status": 201
+      }
+    },
+    {
+      "index": {
+        "_index": "shopping",
+        "_type": "_doc",
+        "_id": "3",
+        "_version": 1,
+        "result": "created",
+        "_shards": {
+          "total": 2,
+          "successful": 1,
+          "failed": 0
+        },
+        "_seq_no": 39,
+        "_primary_term": 1,
+        "status": 201
+      }
+    },
+    {
+      "index": {
+        "_index": "shopping",
+        "_type": "_doc",
+        "_id": "4",
+        "_version": 1,
+        "result": "created",
+        "_shards": {
+          "total": 2,
+          "successful": 1,
+          "failed": 0
+        },
+        "_seq_no": 40,
+        "_primary_term": 1,
+        "status": 201
+      }
+    }
+  ]
+}
+```
+
+![kibana的dev_tools控制台测试bulk批量新增文档数据](./assets/kibana的dev_tools控制台测试bulk批量新增文档数据.png)
+
+### 批量修改
+
+修改的 `action` 为 `update` 。
+
+```text
+POST /shopping/_bulk
+{"update": {"_id": 1}}
+{"doc": {"title": "小米13手机", "category": "小米", "price": 4599.00}}
+{"update": {"_id": 3}}
+{"doc": {"title": "华为mate50手机", "category": "华为", "price": 5499.00}}
+{"update": {"_id": 4}}
+{"doc": {"title": "荣耀80pro手机", "category": "华为", "price": 3799.00}}
+```
+
+服务器响应结果如下：
+
+```json
+{
+  "took": 11,
+  "errors": false,
+  "items": [
+    {
+      "update": {
+        "_index": "shopping",
+        "_type": "_doc",
+        "_id": "1",
+        "_version": 2,
+        "result": "updated",
+        "_shards": {
+          "total": 2,
+          "successful": 1,
+          "failed": 0
+        },
+        "_seq_no": 30,
+        "_primary_term": 1,
+        "status": 200
+      }
+    },
+    {
+      "update": {
+        "_index": "shopping",
+        "_type": "_doc",
+        "_id": "3",
+        "_version": 2,
+        "result": "updated",
+        "_shards": {
+          "total": 2,
+          "successful": 1,
+          "failed": 0
+        },
+        "_seq_no": 31,
+        "_primary_term": 1,
+        "status": 200
+      }
+    },
+    {
+      "update": {
+        "_index": "shopping",
+        "_type": "_doc",
+        "_id": "4",
+        "_version": 2,
+        "result": "updated",
+        "_shards": {
+          "total": 2,
+          "successful": 1,
+          "failed": 0
+        },
+        "_seq_no": 32,
+        "_primary_term": 1,
+        "status": 200
+      }
+    }
+  ]
+}
+```
+
+![kibana的dev_tools控制台测试bulk批量修改文档数据](./assets/kibana的dev_tools控制台测试bulk批量修改文档数据.png)
+
+### 批量删除
+
+修改的 `action` 为 `delete` 。
+
+```text
+POST /shopping/_bulk
+{"delete": {"_id": 1}}
+{"delete": {"_id": 2}}
+{"delete": {"_id": 3}}
+{"delete": {"_id": 4}}
+```
+
+服务器响应结果如下：
+
+```json
+{
+  "took": 10,
+  "errors": false,
+  "items": [
+    {
+      "delete": {
+        "_index": "shopping",
+        "_type": "_doc",
+        "_id": "1",
+        "_version": 3,
+        "result": "deleted",
+        "_shards": {
+          "total": 2,
+          "successful": 1,
+          "failed": 0
+        },
+        "_seq_no": 33,
+        "_primary_term": 1,
+        "status": 200
+      }
+    },
+    {
+      "delete": {
+        "_index": "shopping",
+        "_type": "_doc",
+        "_id": "2",
+        "_version": 2,
+        "result": "deleted",
+        "_shards": {
+          "total": 2,
+          "successful": 1,
+          "failed": 0
+        },
+        "_seq_no": 34,
+        "_primary_term": 1,
+        "status": 200
+      }
+    },
+    {
+      "delete": {
+        "_index": "shopping",
+        "_type": "_doc",
+        "_id": "3",
+        "_version": 3,
+        "result": "deleted",
+        "_shards": {
+          "total": 2,
+          "successful": 1,
+          "failed": 0
+        },
+        "_seq_no": 35,
+        "_primary_term": 1,
+        "status": 200
+      }
+    },
+    {
+      "delete": {
+        "_index": "shopping",
+        "_type": "_doc",
+        "_id": "4",
+        "_version": 3,
+        "result": "deleted",
+        "_shards": {
+          "total": 2,
+          "successful": 1,
+          "failed": 0
+        },
+        "_seq_no": 36,
+        "_primary_term": 1,
+        "status": 200
+      }
+    }
+  ]
+}
+```
+
+![kibana的dev_tools控制台测试bulk批量删除文档数据](./assets/kibana的dev_tools控制台测试bulk批量删除文档数据.png)
+
+### 批量的混合操作
+
+不过一般不推荐这种使用，项目中也用的极少。
+
+```text
+POST /shopping/_bulk
+{"index": {"_id": 1}}
+{"title": "小米手机", "category": "小米", "images": "http://www.gulixueyuan.com/xm.jpg", "price": 2999.00}
+{"delete": {"_id": 1}}
+{"create": {"_id": 3}}
+{"title": "华为手机", "category": "华为", "images": "http://www.gulixueyuan.com/hw.jpg", "price": 4999.00}
+{"update": {"_id": 3}}
+{"doc": {"title": "荣耀80pro手机", "category": "华为", "price": 3799.00}}
+```
+
+服务器响应结果如下：
+
+```json
+{
+  "took": 89,
+  "errors": false,
+  "items": [
+    {
+      "index": {
+        "_index": "shopping",
+        "_type": "_doc",
+        "_id": "1",
+        "_version": 1,
+        "result": "created",
+        "_shards": {
+          "total": 2,
+          "successful": 1,
+          "failed": 0
+        },
+        "_seq_no": 45,
+        "_primary_term": 3,
+        "status": 201
+      }
+    },
+    {
+      "delete": {
+        "_index": "shopping",
+        "_type": "_doc",
+        "_id": "1",
+        "_version": 2,
+        "result": "deleted",
+        "_shards": {
+          "total": 2,
+          "successful": 1,
+          "failed": 0
+        },
+        "_seq_no": 46,
+        "_primary_term": 3,
+        "status": 200
+      }
+    },
+    {
+      "create": {
+        "_index": "shopping",
+        "_type": "_doc",
+        "_id": "3",
+        "_version": 1,
+        "result": "created",
+        "_shards": {
+          "total": 2,
+          "successful": 1,
+          "failed": 0
+        },
+        "_seq_no": 47,
+        "_primary_term": 3,
+        "status": 201
+      }
+    },
+    {
+      "update": {
+        "_index": "shopping",
+        "_type": "_doc",
+        "_id": "3",
+        "_version": 2,
+        "result": "updated",
+        "_shards": {
+          "total": 2,
+          "successful": 1,
+          "failed": 0
+        },
+        "_seq_no": 48,
+        "_primary_term": 3,
+        "status": 200
+      }
+    }
+  ]
+}
+```
+
+![kibana的dev_tools控制台测试bulk批量混合操作文档数据](./assets/kibana的dev_tools控制台测试bulk批量混合操作文档数据.png)
 
 # ElasticSearch 进阶
 

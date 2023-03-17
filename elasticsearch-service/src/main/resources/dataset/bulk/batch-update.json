@@ -1,0 +1,6 @@
+{"update": {"_id": 1}}
+{"doc": {"title": "小米13手机", "category": "小米", "price": 4599.00}}
+{"update": {"_id": 3}}
+{"doc": {"title": "华为mate50手机", "category": "华为", "price": 5499.00}}
+{"update": {"_id": 4}}
+{"doc": {"title": "荣耀80pro手机", "category": "华为", "price": 3799.00}}
