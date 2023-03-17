@@ -1,0 +1,7 @@
+{"index": {"_id": 1}}
+{"title": "小米手机", "category": "小米", "images": "http://www.gulixueyuan.com/xm.jpg", "price": 2999.00}
+{"delete": {"_id": 1}}
+{"create": {"_id": 3}}
+{"title": "华为手机", "category": "华为", "images": "http://www.gulixueyuan.com/hw.jpg", "price": 4999.00}
+{"update": {"_id": 3}}
+{"doc": {"title": "荣耀80pro手机", "category": "华为", "price": 3799.00}}
