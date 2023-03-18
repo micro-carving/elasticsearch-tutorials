@@ -677,7 +677,7 @@ POST /index_name/_bulk
 
 测试集地址：[https://download.elastic.co/demos/kibana/gettingstarted/accounts.zip](https://download.elastic.co/demos/kibana/gettingstarted/accounts.zip)
 
-### 批量新增
+#### 批量新增
 
 新增的 `action` 为 `index` 或者 `create`，这里选择 `index` 。
 
@@ -774,7 +774,7 @@ POST /shopping/_bulk
 
 ![kibana的dev_tools控制台测试bulk批量新增文档数据](./assets/kibana的dev_tools控制台测试bulk批量新增文档数据.png)
 
-### 批量修改
+#### 批量修改
 
 修改的 `action` 为 `update` 。
 
@@ -852,7 +852,7 @@ POST /shopping/_bulk
 
 ![kibana的dev_tools控制台测试bulk批量修改文档数据](./assets/kibana的dev_tools控制台测试bulk批量修改文档数据.png)
 
-### 批量删除
+#### 批量删除
 
 修改的 `action` 为 `delete` 。
 
@@ -945,7 +945,7 @@ POST /shopping/_bulk
 
 ![kibana的dev_tools控制台测试bulk批量删除文档数据](./assets/kibana的dev_tools控制台测试bulk批量删除文档数据.png)
 
-### 批量的混合操作
+#### 批量的混合操作
 
 不过一般不推荐这种使用，项目中也用的极少。
 
@@ -1041,6 +1041,347 @@ POST /shopping/_bulk
 
 ![kibana的dev_tools控制台测试bulk批量混合操作文档数据](./assets/kibana的dev_tools控制台测试bulk批量混合操作文档数据.png)
 
+### 条件查询
+
+准备 4 条数据，可以使用 [batch-create](../elasticsearch-service/src/main/resources/dataset/bulk/batch-create.json) 脚本新增数据；
+
+#### URL 带参查询
+
+查询的条件为：“查找 category 为小米的文档”，向 ES 服务器发 GET请求：`http://127.0.0.1:9200/shopping/_search?q=category:小米`
+
+```text
+### 条件查询（URL带参查询）
+GET {{baseUrl}}/shopping/_search?q=category:小米
+```
+
+服务器响应结果如下：
+
+```json
+{
+  "took": 7,
+  "timed_out": false,
+  "_shards": {
+    "total": 1,
+    "successful": 1,
+    "skipped": 0,
+    "failed": 0
+  },
+  "hits": {
+    "total": {
+      "value": 2,
+      "relation": "eq"
+    },
+    "max_score": 1.3862942,
+    "hits": [
+      {
+        "_index": "shopping",
+        "_type": "_doc",
+        "_id": "1",
+        "_score": 1.3862942,
+        "_source": {
+          "title": "小米手机",
+          "category": "小米",
+          "images": "http://www.gulixueyuan.com/xm.jpg",
+          "price": 2999.00
+        }
+      },
+      {
+        "_index": "shopping",
+        "_type": "_doc",
+        "_id": "2",
+        "_score": 1.3862942,
+        "_source": {
+          "title": "红米手机",
+          "category": "小米",
+          "images": "http://www.gulixueyuan.com/xm.jpg",
+          "price": 1999.00
+        }
+      }
+    ]
+  }
+}
+```
+
+上述为 URL 带参数形式查询，这很容易让不善者心怀恶意，或者参数值出现中文会出现乱码情况。为了避免这些情况，我们可用使用带 JSON 请求体请求进行查询。
+
+#### 请求体带参查询
+
+查询的条件为：“查找 category 为华为的文档”，向 ES 服务器发 GET请求：`http://127.0.0.1:9200/shopping/_search` ，JSON 请求体内容如下：
+
+```json
+{
+  "query": {
+    "match": {
+      "category": "华为"
+    }
+  }
+}
+```
+
+```text
+### 条件查询（请求体带参查询）
+GET {{baseUrl}}/shopping/_search
+Content-Type: application/json
+
+{
+  "query": {
+    "match": {
+      "category": "华为"
+    }
+  }
+}
+```
+
+服务器响应结果如下：
+
+```json
+{
+  "took": 1,
+  "timed_out": false,
+  "_shards": {
+    "total": 1,
+    "successful": 1,
+    "skipped": 0,
+    "failed": 0
+  },
+  "hits": {
+    "total": {
+      "value": 2,
+      "relation": "eq"
+    },
+    "max_score": 1.3862942,
+    "hits": [
+      {
+        "_index": "shopping",
+        "_type": "_doc",
+        "_id": "3",
+        "_score": 1.3862942,
+        "_source": {
+          "title": "华为手机",
+          "category": "华为",
+          "images": "http://www.gulixueyuan.com/hw.jpg",
+          "price": 4999.00
+        }
+      },
+      {
+        "_index": "shopping",
+        "_type": "_doc",
+        "_id": "4",
+        "_score": 1.3862942,
+        "_source": {
+          "title": "荣耀手机",
+          "category": "华为",
+          "images": "http://www.gulixueyuan.com/hw.jpg",
+          "price": 1999.00
+        }
+      }
+    ]
+  }
+}
+```
+
+#### 请求体查询所有内容
+
+查找所有文档内容，向 ES 服务器发 GET请求：http://127.0.0.1:9200/shopping/_search ，JSON 请求体如下：
+
+```json
+{
+  "query": {
+    "match_all": {}
+  }
+}
+```
+
+```text
+### 请求体查询所有
+GET {{baseUrl}}/shopping/_search
+Content-Type: application/json
+
+{
+  "query": {
+    "match_all": {}
+  }
+}
+```
+
+服务器响应结果如下：
+
+```json
+{
+  "took": 0,
+  "timed_out": false,
+  "_shards": {
+    "total": 1,
+    "successful": 1,
+    "skipped": 0,
+    "failed": 0
+  },
+  "hits": {
+    "total": {
+      "value": 4,
+      "relation": "eq"
+    },
+    "max_score": 1.0,
+    "hits": [
+      {
+        "_index": "shopping",
+        "_type": "_doc",
+        "_id": "1",
+        "_score": 1.0,
+        "_source": {
+          "title": "小米手机",
+          "category": "小米",
+          "images": "http://www.gulixueyuan.com/xm.jpg",
+          "price": 2999.00
+        }
+      },
+      {
+        "_index": "shopping",
+        "_type": "_doc",
+        "_id": "2",
+        "_score": 1.0,
+        "_source": {
+          "title": "红米手机",
+          "category": "小米",
+          "images": "http://www.gulixueyuan.com/xm.jpg",
+          "price": 1999.00
+        }
+      },
+      {
+        "_index": "shopping",
+        "_type": "_doc",
+        "_id": "3",
+        "_score": 1.0,
+        "_source": {
+          "title": "华为手机",
+          "category": "华为",
+          "images": "http://www.gulixueyuan.com/hw.jpg",
+          "price": 4999.00
+        }
+      },
+      {
+        "_index": "shopping",
+        "_type": "_doc",
+        "_id": "4",
+        "_score": 1.0,
+        "_source": {
+          "title": "荣耀手机",
+          "category": "华为",
+          "images": "http://www.gulixueyuan.com/hw.jpg",
+          "price": 1999.00
+        }
+      }
+    ]
+  }
+}
+```
+
+#### 查询指定字段的所有内容
+
+这里是查询指定字段，是返回所有指定字段查询的数据，向 ES 服务器发 GET 请求：`http://127.0.0.1:9200/shopping/_search` ，JSON 请求体如下：
+
+```json
+{
+  "query": {
+    "match_all": {}
+  },
+  "_source": [
+    "title"
+  ]
+}
+```
+
+```text
+### 查询指定字段的所有内容
+GET {{baseUrl}}/shopping/_search
+Content-Type: application/json
+
+{
+  "query": {
+    "match_all": {}
+  },
+  "_source": ["title"]
+}
+```
+
+服务器响应结果如下：
+
+```text
+{
+  "took": 0,
+  "timed_out": false,
+  "_shards": {
+    "total": 1,
+    "successful": 1,
+    "skipped": 0,
+    "failed": 0
+  },
+  "hits": {
+    "total": {
+      "value": 4,
+      "relation": "eq"
+    },
+    "max_score": 1.0,
+    "hits": [
+      {
+        "_index": "shopping",
+        "_type": "_doc",
+        "_id": "1",
+        "_score": 1.0,
+        "_source": {
+          "title": "小米手机"
+        }
+      },
+      {
+        "_index": "shopping",
+        "_type": "_doc",
+        "_id": "2",
+        "_score": 1.0,
+        "_source": {
+          "title": "红米手机"
+        }
+      },
+      {
+        "_index": "shopping",
+        "_type": "_doc",
+        "_id": "3",
+        "_score": 1.0,
+        "_source": {
+          "title": "华为手机"
+        }
+      },
+      {
+        "_index": "shopping",
+        "_type": "_doc",
+        "_id": "4",
+        "_score": 1.0,
+        "_source": {
+          "title": "荣耀手机"
+        }
+      }
+    ]
+  }
+}
+```
+
+### 分页查询
+
+#### from + size 浅分页
+
+向 ES 服务器发 GET请求：`http://127.0.0.1:9200/shopping/_search` ，JSON 请求体如下：
+
+```json
+{
+  "query": {
+    "match_all": {}
+  },
+  "from": 0,
+  "size": 2
+}
+```
+
+
+
 # ElasticSearch 进阶
 
 # ElasticSearch 集成
@@ -1051,3 +1392,4 @@ POST /shopping/_bulk
 
 - [https://www.bilibili.com/video/BV1hh411D7sb](https://www.bilibili.com/video/BV1hh411D7sb)
 - [https://blog.csdn.net/u011863024/article/details/115721328](https://blog.csdn.net/u011863024/article/details/115721328)
+- [https://blog.csdn.net/ChengHuanHuaning/article/details/117696054](https://blog.csdn.net/ChengHuanHuaning/article/details/117696054)

@@ -69,3 +69,52 @@ Content-Type: application/json
 
 ### 删除文档（逻辑删除）
 DELETE {{baseUrl}}/shopping/_doc/1
+
+
+### 条件查询（URL带参查询）
+GET {{baseUrl}}/shopping/_search?q=category:小米
+
+### 条件查询（请求体带参查询）
+GET {{baseUrl}}/shopping/_search
+Content-Type: application/json
+
+{
+  "query": {
+    "match": {
+      "category": "华为"
+    }
+  }
+}
+
+### 请求体查询所有
+GET {{baseUrl}}/shopping/_search
+Content-Type: application/json
+
+{
+  "query": {
+    "match_all": {}
+  }
+}
+
+### 查询指定字段的所有内容
+GET {{baseUrl}}/shopping/_search
+Content-Type: application/json
+
+{
+  "query": {
+    "match_all": {}
+  },
+  "_source": ["title"]
+}
+
+### 分页查询
+GET {{baseUrl}}/shopping/_search
+Content-Type: application/json
+
+{
+  "query": {
+    "match_all": {}
+  },
+  "from": 2,
+  "size": 2
+}
