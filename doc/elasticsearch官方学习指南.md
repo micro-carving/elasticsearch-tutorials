@@ -1085,6 +1085,48 @@ GUI）来配置 Elasticsearch 服务。
 - 配置[重要的 Elasticsearch 设置](https://www.elastic.co/guide/en/elasticsearch/reference/7.17/important-settings.html)。
 - 配置[重要的系统设置](https://www.elastic.co/guide/en/elasticsearch/reference/7.17/system-config.html)。
 
+#### 使用 Debian 包安装 Elasticsearch
+
+Elasticsearch 的 Debian 包可以从[我们的网站](https://www.elastic.co/guide/en/elasticsearch/reference/7.17/deb.html#install-deb)或者从我们的 [APT 仓库](https://www.elastic.co/guide/en/elasticsearch/reference/7.17/deb.html#deb-repo)下载。它可以用于在任何基于 Debian 的系统（如 Debian 和 Ubuntu）上安装 Elasticsearch。
+
+这个包包含免费和订阅的特性。[开始 30 天的试用](https://www.elastic.co/guide/en/elasticsearch/reference/7.17/license-settings.html)，尝试所有功能。
+
+Elasticsearch 的最新稳定版本，能在 [Elasticsearch 下载页面](https://www.elastic.co/downloads/elasticsearch)找到。其他版本能在[历史发布页面](https://www.elastic.co/downloads/past-releases)找到。
+
+> **注意**
+> 
+> Elasticsearch 包含 JDK 维护者（GPLv2+CE）提供的 [OpenJDK](https://openjdk.java.net/)捆绑版本。要使用自己的 Java 版本，查阅 [JVM 版本要求](https://www.elastic.co/guide/en/elasticsearch/reference/7.17/setup.html#jvm-version)。
+
+##### 导入 Elasticsearch PGP 密钥
+我们使用带指纹的 Elasticsearch 签名密钥（PGP 密钥 [D88E42B4](https://pgp.mit.edu/pks/lookup?op=vindex&search=0xD27D666CD88E42B4)，存在[https://pgp.mit.edu](https://pgp.mit.edu/)上）签名所有的包：
+
+4609 5ACC 8548 582C 1A26 99A9 D27D 666C D88E 42B4
+
+下载和安装公共签名密钥：
+
+```shell
+wget -qO - https://artifacts.elastic.co/GPG-KEY-elasticsearch | sudo gpg --dearmor -o /usr/share/keyrings/elasticsearch-keyring.gpg
+```
+
+##### 从 APT 仓库安装
+在继续之前，你可能需要在 Debian 上安装 `apt-transport-https` 包：
+
+```shell
+sudo apt-get install apt-transport-https
+```
+
+将仓库定义保存到 `/etc/apt/sources.list.d/elastic-7.x.list`:
+
+```shell
+echo "deb [signed-by=/usr/share/keyrings/elasticsearch-keyring.gpg] https://artifacts.elastic.co/packages/7.x/apt stable main" | sudo tee /etc/apt/sources.list.d/elastic-7.x.list
+```
+
+> 由于以下原因，指南不使用 `add-apt-repository`:
+>
+> 1. `add-apt-repository` 向系统 `/etc/apt/sources.list` 文件中添加条目，而不是 `/etc/apt/sources.list.d` 中的每个仓库的干净文件
+> 2. `add-apt-repository` 不是许多发行版本的默认安装部分，需要许多非默认的依赖
+> 3. 老版本的 add-apt-repository 总会添加一个 deb-src 条目，由于我们没有提供源包，这会导致错误。如果你已经添加了 deb-src 条目，在你删除 deb-src 条目前，你会看到如下错误： Unable to find expected entry 'main/source/Sources' in Release file (Wrong sources.list entry or malformed file)
+
 # 升级 Elasticsearch
 
 # 索引模块
