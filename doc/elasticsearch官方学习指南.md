@@ -3119,19 +3119,23 @@ PUT _cluster/settings
 
 > **注意**
 >
-> `_tier` 过滤基于节点角色。只有角色的子集是数据层角色，通用数据角色将匹配任何层筛选。数据层角色的角色子集，但通用数据角色将匹配任何层筛选。
+> `_tier` 过滤基于[节点](https://www.elastic.co/guide/en/elasticsearch/reference/7.17/modules-node.html)角色。只有角色的子集是[数据层](https://www.elastic.co/guide/en/elasticsearch/reference/7.17/data-tiers.html)角色，通用[数据角色](https://www.elastic.co/guide/en/elasticsearch/reference/7.17/modules-node.html#data-node)将匹配任何层筛选。数据层角色的角色子集，但通用数据角色将匹配任何层筛选。
 
 指定属性值时可以使用通配符，例如：
 
+```text
 PUT _cluster/settings
 {
-"persistent": {
-"cluster.routing.allocation.exclude._ip": "192.168.2.*"
+  "persistent": {
+    "cluster.routing.allocation.exclude._ip": "192.168.2.*"
+  }
 }
-}
+```
 
 #### 杂项集群级设置
-#元数据
+
+##### 元数据
+
 可以使用以下设置将整个群集设置为只读：
 
 - `cluster.blocks.read_only`
@@ -3140,36 +3144,37 @@ PUT _cluster/settings
 
 - `cluster.blocks.read_only_allow_delete`
 
-（[动态的](https://www.elastic.co/guide/en/elasticsearch/reference/7.17/settings.html#dynamic-cluster-setting)）与 cluster.blocks.read_only 相同，但允许删除索引以释放资源。
+（[动态的](https://www.elastic.co/guide/en/elasticsearch/reference/7.17/settings.html#dynamic-cluster-setting)）与 `cluster.blocks.read_only` 相同，但允许删除索引以释放资源。
 
-警告
+> **警告**
+> 
+> 不要依赖此设置来阻止更改集群。任何有权访问[集群更新设置](https://www.elastic.co/guide/en/elasticsearch/reference/7.17/cluster-update-settings.html) API 的用户都可以使集群再次读写。
 
-不要依赖此设置来阻止更改集群。任何有权访问集群更新设置 API 的用户都可以使集群再次读写。
+##### 集群分片限制
 
-#### 集群分片限制
 根据集群中的节点数量，对集群中的碎片数量有一个软限制。这是为了防止可能无意中破坏集群稳定的操作。
 
-重要
-
-此限制旨在作为安全网，而不是尺寸建议。集群可以安全支持的分片的确切数量取决于硬件配置和工作负载，但在几乎所有情况下都应该保持在这个限制之下，因为默认限制设置得很高。
+> **重要**
+> 
+> 此限制旨在作为安全网，而不是尺寸建议。集群可以安全支持的分片的确切数量取决于硬件配置和工作负载，但在几乎所有情况下都应该保持在这个限制之下，因为默认限制设置得很高。
 
 如果某个操作（如创建新索引、恢复索引快照或打开关闭的索引）会导致集群中的碎片数量超过此限制，则该操作将失败，并出现指示碎片限制的错误。
 
-如果由于节点成员身份的更改或设置的更改，群集已超过限制，则创建或打开索引的所有操作都将失败，除非限制如下文所述增加，或者关闭或删除某些索引以使碎片数低于限制。
+如果由于节点成员身份的更改或设置的更改，群集已超过限制，则创建或打开索引的所有操作都将失败，除非限制如下文所述增加，或者[关闭](https://www.elastic.co/guide/en/elasticsearch/reference/7.17/indices-open-close.html)或[删除](https://www.elastic.co/guide/en/elasticsearch/reference/7.17/indices-delete-index.html)某些索引以使碎片数低于限制。
 
 对于正常（非冻结）索引，群集分片限制默认为每个非冻结数据节点 1000 个碎片，对于冻结索引，每个冻结数据节点 3000 个分片。所有开放索引的主分片和副本分片都将计入限制，包括未分配的分片。例如，一个包含 5 个主分片和2个副本的开放索引计为 15 个分片。闭合索引不会影响分片计数。
 
-你可以使用以下设置[动态的](https://www.elastic.co/guide/en/elasticsearch/reference/7.17/settings.html#dynamic-cluster-setting)调整集群分片限制：
+你可以使用以下设置动态的调整集群分片限制：
 
 - `cluster.max_shards_per_node`
 
 （[动态的](https://www.elastic.co/guide/en/elasticsearch/reference/7.17/settings.html#dynamic-cluster-setting)）限制集群的主分片和副本分片的总数。Elasticsearch 计算极限如下：
 
-- `cluster.max_shards_per_node * `非冻结节点数
+`cluster.max_shards_per_node * 非冻结节点数`
 
-关闭索引的分片不计入此限制。默认为 1000。没有数据节点的集群是无限的。
+关闭索引的分片不计入此限制。默认为 `1000`。没有数据节点的集群是无限的。
 
-Elasticsearch 拒绝任何创建超过此限制的分片的请求。例如，一个 cluster.max_shards_per_node 设置为 100 且三个数据节点的集群的分片限制为 300。如果该集群已经包含 296 个分片，Elasticsearch 将拒绝任何向集群添加五个或更多分片的请求。
+Elasticsearch 拒绝任何创建超过此限制的分片的请求。例如，一个 `cluster.max_shards_per_node` 设置为 `100` 且三个数据节点的集群的分片限制为 300。如果该集群已经包含 296 个分片，Elasticsearch 将拒绝任何向集群添加五个或更多分片的请求。
 
 请注意，冻结分片有自己的独立限制。
 
@@ -3177,52 +3182,59 @@ Elasticsearch 拒绝任何创建超过此限制的分片的请求。例如，一
 
 （[动态的](https://www.elastic.co/guide/en/elasticsearch/reference/7.17/settings.html#dynamic-cluster-setting)）限制集群的主节点和副本冻结分片的总数。Elasticsearch 计算极限如下：
 
-- `cluster.max_shards_per_node * `冻结结点数量
+`cluster.max_shards_per_node * 冻结结点数量`
 
-关闭索引的碎片不计入此限制。默认为 3000。没有冻结数据节点的集群是无限的。
+关闭索引的碎片不计入此限制。默认为 `3000`。没有冻结数据节点的集群是无限的。
 
-Elasticsearch拒绝任何创建超过此限制的冻结分片的请求。例如，cluster.max_shards_per_node.frozen 设置为 100 且三个冻结数据节点的集群的冻结分片限制为 300。如果群集已包含 296 个分片，Elasticsearch 将拒绝向集群添加五个或更多冻结分片的任何请求。
+Elasticsearch拒绝任何创建超过此限制的冻结分片的请求。例如，`cluster.max_shards_per_node.frozen` 设置为 `100` 且三个冻结数据节点的集群的冻结分片限制为 300。如果群集已包含 296 个分片，Elasticsearch 将拒绝向集群添加五个或更多冻结分片的任何请求。
 
-注意
+> **注意**
+> 
+> 这些设置不限制单个节点的分片。要限制每个节点的分片数量，请使用 [`cluster.routing.allocation.total_shards_per_node`](https://www.elastic.co/guide/en/elasticsearch/reference/7.17/allocation-total-shards.html#cluster-total-shards-per-node) 设置。
 
-这些设置不限制单个节点的分片。要限制每个节点的分片数量，请使用 cluster.routing.allocation.total_shards_per_node 设置。
+##### 用户定义的集群元数据
 
-#### 用户定义的集群元数据
-可以使用群集群设置 API 存储和检索用户定义的元数据。这可以用于存储关于集群的任意、不经常更改的数据，而无需创建索引来存储数据。可以使用以 cluster.metadata 为前缀的任何密钥来存储此数据。例如，将集群管理员的电子邮件地址存储在密钥 cluster.metadata.administrato 下，发出此请求：
+可以使用群集群设置 API 存储和检索用户定义的元数据。这可以用于存储关于集群的任意、不经常更改的数据，而无需创建索引来存储数据。可以使用以 `cluster.metadata` 为前缀的任何密钥来存储此数据。例如，将集群管理员的电子邮件地址存储在密钥 `cluster.metadata.administrator` 下，发出此请求：
 
+```text
 PUT /_cluster/settings
 {
-"persistent": {
-"cluster.metadata.administrator": "sysadmin@example.com"
+  "persistent": {
+    "cluster.metadata.administrator": "sysadmin@example.com"
+  }
 }
-}
-重要
+```
 
-用户定义的集群元数据不用于存储敏感或机密信息。任何有权访问集群获取设置 API 的人都可以查看存储在用户定义的集群元数据中的任何信息，并将其记录在 Elasticsearch 日志中。
+> **重要**
+> 
+> 用户定义的集群元数据不用于存储敏感或机密信息。任何有权访问[集群获取设置](https://www.elastic.co/guide/en/elasticsearch/reference/7.17/cluster-get-settings.html) API 的人都可以查看存储在用户定义的集群元数据中的任何信息，并将其记录在 Elasticsearch 日志中。
 
-#### 索引墓碑
+##### 索引墓碑
+
 集群状态维护索引逻辑删除，以明确表示已删除的索引。集群状态下维护的逻辑删除数由以下设置控制：
 
 - `cluster.indices.tombstones.size`
 
-（静态）索引逻辑删除防止在发生删除时不属于集群的节点加入集群并重新导入索引，就像从未发出删除一样。为了防止集群状态变大，我们只保留最后的 cluster.indices.tombstones.size 次删除，默认为 500 次。如果你希望节点不在集群中，并且错过了 500 次以上的删除，你可以增加它。我们认为这是罕见的，因此是违约。墓碑不会占用太多空间，但我们也认为像 50000 这样的数字可能太大了。
+（[静态](https://www.elastic.co/guide/en/elasticsearch/reference/7.17/settings.html#static-cluster-setting)）索引逻辑删除防止在发生删除时不属于集群的节点加入集群并重新导入索引，就像从未发出删除一样。为了防止集群状态变大，我们只保留最后的 `cluster.indices.tombstones.size` 次删除，默认为 500 次。如果你希望节点不在集群中，并且错过了 500 次以上的删除，你可以增加它。我们认为这是罕见的，因此是违约。墓碑不会占用太多空间，但我们也认为像 50000 这样的数字可能太大了。
 
-如果 Elasticsearch 遇到当前集群状态中不存在的索引数据，则认为这些索引是悬空的。例如，如果在 Elasticsearch 节点脱机时删除了多个 cluster.indices.tombstones.size 索引，则会发生这种情况。
+如果 Elasticsearch 遇到当前集群状态中不存在的索引数据，则认为这些索引是悬空的。例如，如果在 Elasticsearch 节点脱机时删除了多个 `cluster.indices.tombstones.size` 索引，则会发生这种情况。
 
-你可以使用悬空索引 API 来管理这种情况。
+你可以使用[悬空索引 API](https://www.elastic.co/guide/en/elasticsearch/reference/7.17/indices.html#dangling-indices-api) 来管理这种情况。
 
-#### 日志器
+##### 日志器
 
-可以使用 logger. 前缀[动态的](https://www.elastic.co/guide/en/elasticsearch/reference/7.17/settings.html#dynamic-cluster-setting)更新控制日志记录的设置。例如，要将 indices.recovery 模块的日志级别提高到 DEBUG，发出以下请求：
+可以使用 `logger.` 前缀[动态的](https://www.elastic.co/guide/en/elasticsearch/reference/7.17/settings.html#dynamic-cluster-setting)更新控制日志记录的设置。例如，要将 `indices.recovery` 模块的日志级别提高到 `DEBUG`，发出以下请求：
 
+```text
 PUT /_cluster/settings
 {
-"persistent": {
-"logger.org.elasticsearch.indices.recovery": "DEBUG"
+  "persistent": {
+    "logger.org.elasticsearch.indices.recovery": "DEBUG"
+  }
 }
-}
+```
 
-#### 持久性任务分配
+##### 持久性任务分配
 
 插件可以创建一种称为持久任务的任务。这些任务通常是长寿命任务，存储在集群状态中，允许任务在完全集群重启后恢复。
 
@@ -3232,13 +3244,25 @@ PUT /_cluster/settings
 
 （[动态的](https://www.elastic.co/guide/en/elasticsearch/reference/7.17/settings.html#dynamic-cluster-setting)）启用或禁用永久任务的分配：
 
-all ——（默认）允许将持久任务分配给节点
-none ——任何类型的持久任务都不允许分配
+`all` ——（默认）允许将持久任务分配给节点
+
+`none` —— 任何类型的持久任务都不允许分配
+
 此设置不会影响已执行的持久任务。只有新创建的持久任务或必须重新分配的任务（例如，在节点离开集群后）才会受到此设置的影响。
 
 - `cluster.persistent_tasks.allocation.recheck_interval`
 
 （[动态的](https://www.elastic.co/guide/en/elasticsearch/reference/7.17/settings.html#dynamic-cluster-setting)）当集群状态发生显著变化时，主节点将自动检查是否需要分配持久任务。但是，可能还有其他因素，例如内存使用，会影响是否可以将持久任务分配给节点，但不会导致集群状态改变。此设置控制执行分配检查以对这些因素作出反应的频率。默认值为 30 秒。最小允许值为 10 秒。
+
+##### 强制执行 default_tier_preference
+
+[默认情况下](https://www.elastic.co/guide/en/elasticsearch/reference/7.17/data-tiers.html#data-tier-allocation)，新创建的索引会自动分配 [`index.routing.allocation.include_tier_preference`](https://www.elastic.co/guide/en/elasticsearch/reference/7.17/data-tier-shard-filtering.html#tier-preference-allocation-filter)。这可以通过[创建索引](https://www.elastic.co/guide/en/elasticsearch/reference/7.17/indices-create-index.html) API 或使用[索引模板](https://www.elastic.co/guide/en/elasticsearch/reference/7.17/index-templates.html)将 `_tier_preference` 设置为 `null` 来覆盖。
+
+在 8.0 中，无法通过将 `_tier_preference` 设置为 `null` 来绕过此行为所有新创建的索引都将始终具有关联的 `tier_preference`。
+
+- `cluster.routing.allocation.enforce_default_tier_preference`
+
+（[动态](https://www.elastic.co/guide/en/elasticsearch/reference/7.17/settings.html#dynamic-cluster-setting)）强制新创建的索引必须始终具有非空的层首选项，绕过请求或模板设置。默认为 `false`。
 
 # 升级 Elasticsearch
 
