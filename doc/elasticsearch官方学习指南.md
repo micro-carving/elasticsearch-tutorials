@@ -3713,6 +3713,63 @@ Elasticsearch 使用对等恢复过程恢复副本并重新定位主分片，这
 
 如果设置为 `trial`，自行生成的许可证只能在 30 天内使用 x-pack 的所有功能。如果需要，可以稍后将集群降级为基本许可证。
 
+### 本地网关设置
+
+本地网关在整个集群重启期间存储集群状态和分片数据。
+
+以下静态设置（必须在每个主节点上设置）控制新选择的主节点在尝试恢复群集状态和群集数据之前应等待多长时间。
+
+> 注意
+>
+> 这些设置仅在完全重新启动集群时生效。
+
+`gateway.expected_nodes`
+
+([静态](https://www.elastic.co/guide/en/elasticsearch/reference/7.17/settings.html#static-cluster-setting))[~~7.7.0~~]集群中预期的数据或主节点的数量。当预期的节点数加入集群时，本地碎片的恢复开始。默认为 `0`。
+
+`gateway.expected_master_nodes`
+
+([静态](https://www.elastic.co/guide/en/elasticsearch/reference/7.17/settings.html#static-cluster-setting))[~~7.7.0~~]集群中预期的主节点的数量。当预期的主节点的预期数加入集群时，本地碎片的恢复开始。默认为 `0`。
+
+`gateway.expected_data_nodes`
+
+([静态](https://www.elastic.co/guide/en/elasticsearch/reference/7.17/settings.html#static-cluster-setting))集群中预期的数据节点数。当预期数量的数据节点加入集群时，开始恢复本地分片。默认值为 `0`。
+
+`gateway.recover_after_time`
+
+([静态](https://www.elastic.co/guide/en/elasticsearch/reference/7.17/settings.html#static-cluster-setting))如果未达到预期的节点数，恢复过程将等待配置的时间量，然后再尝试恢复。如果配置了 `expected_nodes` 设置之一，则默认为 `5m`。
+
+一旦 `recover_after_time` 持续时间超时，只要满足以下条件，恢复将开始：
+
+`gateway.recover_after_nodes`
+
+([静态](https://www.elastic.co/guide/en/elasticsearch/reference/7.17/settings.html#static-cluster-setting))[~~7.7.0~~]只要许多数据或主节点加入了集群，就可以恢复。
+
+`gateway.recover_after_master_nodes`
+
+([静态](https://www.elastic.co/guide/en/elasticsearch/reference/7.17/settings.html#static-cluster-setting))[~~7.7.0~~]只要这许多主节点加入了集群，就可以恢复。
+
+`gateway.recover_after_data_nodes`
+
+([静态](https://www.elastic.co/guide/en/elasticsearch/reference/7.17/settings.html#static-cluster-setting))只要有这么多数据节点加入群集，即可恢复。
+
+#### 悬空索引
+
+当节点加入集群时，如果发现存储在其本地数据目录中的任何碎片在集群中尚不存在，则会认为这些分片属于 “悬空” 索引。使用 `gateway.auto_import_dangling_indices` 将悬挂索引导入集群是不安全的。相反，使用[悬挂索引 API](https://www.elastic.co/guide/en/elasticsearch/reference/7.17/indices.html#dangling-indices-api)。当索引仍然是集群的一部分时，这两种机制都不能保证导入的数据是否真正代表数据的最新状态。
+
+`gateway.auto_import_dangling_indices`
+
+[~~7.9.0~~]如果没有同名的索引存在，是否自动将悬空索引导入集群状态。默认为 `false`。
+
+> **警告**
+>
+> 自动导入功能旨在尽最大努力帮助丢失所有主节点的用户。例如，如果要启动一个不知道集群中其他索引的新主节点，则添加旧节点将导致导入旧索引，而不是删除旧索引。然而，自动导入存在一些问题，强烈建议使用 <悬挂索引api，专用 api>。
+
+
+> **警告**
+>
+> 丢失所有主节点是一种无论如何都要避免的情况，因为这会使集群的元数据和数据处于危险之中。
+
 # 升级 Elasticsearch
 
 # 索引模块
