@@ -3703,6 +3703,16 @@ Elasticsearch 使用对等恢复过程恢复副本并重新定位主分片，这
 
 ([静态](https://www.elastic.co/guide/en/elasticsearch/reference/7.17/settings.html#static-cluster-setting))如果将 `index_buffer_size` 指定为百分比，则可以使用此设置指定绝对最大值。默认为未限定。
 
+### 许可证设置
+
+你可以在 `elasticsearch.yml` 文件中配置此许可设置。有关更多信息，请参阅[许可证管理](https://www.elastic.co/guide/en/kibana/7.17/managing-licenses.html)。
+
+`xpack.license.self_generated.type`
+
+([静态](https://www.elastic.co/guide/en/elasticsearch/reference/7.17/settings.html#static-cluster-setting)) 设置为 `basic` (默认值)以启用 X-Pack 的基本功能。
+
+如果设置为 `trial`，自行生成的许可证只能在 30 天内使用 x-pack 的所有功能。如果需要，可以稍后将集群降级为基本许可证。
+
 # 升级 Elasticsearch
 
 # 索引模块
