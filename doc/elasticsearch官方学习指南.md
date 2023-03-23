@@ -3476,6 +3476,54 @@ PUT /_cluster/settings
 
 你可以使用[节点统计 API](https://www.elastic.co/guide/en/elasticsearch/reference/7.17/cluster-nodes-stats.html) 或 [cat 字段数据 API](https://www.elastic.co/guide/en/elasticsearch/reference/7.17/cat-fielddata.html) 监视字段数据的内存使用情况以及字段数据断路器。
 
+### Elasticsearch 索引生命周期管理设置
+
+这些是可用于配置[索引生命周期管理](https://www.elastic.co/guide/en/elasticsearch/reference/7.17/index-lifecycle-management.html)（ILM）的设置。
+
+#### 集群级设置
+
+`xpack.ilm.enabled`
+
+([静态](https://www.elastic.co/guide/en/elasticsearch/reference/7.17/settings.html#static-cluster-setting)，布尔值)[~~7.8.0~~]
+
+此不推荐使用的设置已无效，将在 Elasticsearch 8.0 中删除。
+
+`indices.lifecycle.history_index_enabled`
+
+([静态](https://www.elastic.co/guide/en/elasticsearch/reference/7.17/settings.html#static-cluster-setting)，布尔值)是否启用 ILM 的历史索引。如果启用，ILM 将把作为 ILM 策略一部分采取的操作的历史记录记录到 `ilm-history-*` 索引中。默认为 `true`。
+
+`indices.lifecycle.poll_interval`
+
+([动态](https://www.elastic.co/guide/en/elasticsearch/reference/7.17/settings.html#dynamic-cluster-setting)，时间单位值)索引生命周期管理检查符合策略条件的索引的频率。默认为 `10m`。
+
+#### 索引级设置
+
+这些索引级 ILM 设置通常通过索引模板进行配置。有关详细信息，参阅[创建生命周期策略](https://www.elastic.co/guide/en/elasticsearch/reference/7.17/getting-started-index-lifecycle-management.html#ilm-gs-create-policy)。
+
+`index.lifecycle.indexing_complete`
+
+([动态](https://www.elastic.co/guide/en/elasticsearch/reference/7.17/settings.html#dynamic-cluster-setting)，布尔值)指示索引是否已翻转。ILM 完成翻转操作时自动设置为 `true`。可以将其显式设置为[跳过翻转](https://www.elastic.co/guide/en/elasticsearch/reference/7.17/skipping-rollover.html)。默认为 `false`。
+
+`index.lifecycle.name`
+
+([动态](https://www.elastic.co/guide/en/elasticsearch/reference/7.17/settings.html#dynamic-cluster-setting)，字符串)用于管理索引的策略的名称。有关 Elasticsearch 如何应用策略更改的信息，参阅[策略更新](https://www.elastic.co/guide/en/elasticsearch/reference/7.17/update-lifecycle-policy.html)。
+
+`index.lifecycle.origination_date`
+
+([动态](https://www.elastic.co/guide/en/elasticsearch/reference/7.17/settings.html#dynamic-cluster-setting)，长整型)如果指定，这是用于计算其相变的索引年龄的时间戳。如果创建包含旧数据的新索引并希望使用原始创建日期计算索引年限，请使用此设置。以毫秒为单位指定为 Unix epoch 值。
+
+`index.lifecycle.parse_origination_date`
+
+([动态](https://www.elastic.co/guide/en/elasticsearch/reference/7.17/settings.html#dynamic-cluster-setting)，布尔值)设置为 `true` 可从索引名称解析起始日期。该起始日期用于计算其相变的索引年龄。索引名称必须匹配模式 `^.*-{date_format}-\\d+`，其中 `date_format` 为 `yyyy.MM.dd`，尾随数字是可选的。滚动的索引通常与完整格式匹配，例如 `logs-2016.10.31-000002`。如果索引名称与模式不匹配，则索引创建失败。
+
+`index.lifecycle.step.wait_time_threshold`
+
+([动态](https://www.elastic.co/guide/en/elasticsearch/reference/7.17/settings.html#dynamic-cluster-setting)，[时间单位值](https://www.elastic.co/guide/en/elasticsearch/reference/7.17/common-options.html#time-units))等待群集在 ILM [收缩](https://www.elastic.co/guide/en/elasticsearch/reference/7.17/ilm-shrink.html)操作期间解决分配问题的时间。必须大于 `1h`（1小时）。默认为 `12h`（12小时）。参阅用于[收缩的分片分配](https://www.elastic.co/guide/en/elasticsearch/reference/7.17/ilm-shrink.html#ilm-shrink-shard-allocation)。
+
+`index.lifecycle.rollover_alias`
+
+([动态](https://www.elastic.co/guide/en/elasticsearch/reference/7.17/settings.html#dynamic-cluster-setting)，字符串)索引滚动时要更新的索引别名。指定何时使用包含滚动操作的策略。当索引翻转时，别名将更新以反映索引不再是写索引。有关翻转索引的详细信息，参阅[翻转](https://www.elastic.co/guide/en/elasticsearch/reference/7.17/index-rollover.html)。
+
 # 升级 Elasticsearch
 
 # 索引模块
