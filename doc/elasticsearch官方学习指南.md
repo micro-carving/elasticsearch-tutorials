@@ -3524,6 +3524,49 @@ PUT /_cluster/settings
 
 ([动态](https://www.elastic.co/guide/en/elasticsearch/reference/7.17/settings.html#dynamic-cluster-setting)，字符串)索引滚动时要更新的索引别名。指定何时使用包含滚动操作的策略。当索引翻转时，别名将更新以反映索引不再是写索引。有关翻转索引的详细信息，参阅[翻转](https://www.elastic.co/guide/en/elasticsearch/reference/7.17/index-rollover.html)。
 
+### 索引管理设置
+
+你可以使用以下集群设置来启用或禁用索引管理功能。
+
+`action.auto_create_index`
+
+([动态](https://www.elastic.co/guide/en/elasticsearch/reference/7.17/settings.html#dynamic-cluster-setting))如果索引还不存在将[自动创建索引](https://www.elastic.co/guide/en/elasticsearch/reference/7.17/docs-index_.html#index-creation)并应用任何配置的索引模板。默认为 `true`。
+
+`action.destructive_requires_name`
+
+([动态](https://www.elastic.co/guide/en/elasticsearch/reference/7.17/settings.html#dynamic-cluster-setting))设置为 `true` 时，必须指定索引名称以[删除索引](https://www.elastic.co/guide/en/elasticsearch/reference/7.17/indices-delete-index.html)。不可能删除所有带 `_all` 的索引或使用通配符。
+
+`cluster.indices.close.enable`
+
+([动态](https://www.elastic.co/guide/en/elasticsearch/reference/7.17/settings.html#dynamic-cluster-setting))允许[关闭 Elasticsearch 中的开放索引](https://www.elastic.co/guide/en/elasticsearch/reference/7.17/indices-close.html)。如果为 `false`，则无法关闭打开的索引。默认为 `true`。
+
+> **注意**
+> 
+> 关闭的索引仍然占用大量磁盘空间。
+
+`reindex.remote.whitelist`
+
+([静态](https://www.elastic.co/guide/en/elasticsearch/reference/7.17/settings.html#static-cluster-setting))指定可以从远程重索引的主机。期望它为 `host:port` 字符串的 YAML 数组。由逗号分隔的 `host:port` 条目列表组成。默认值为 `["\*.io:*"，"\*.com:*"]`。
+
+`stack.templates.enabled`
+
+([动态](https://www.elastic.co/guide/en/elasticsearch/reference/7.17/settings.html#dynamic-cluster-setting))如果为 `true`，则启用内置索引和组件模板。[Elastic Agent](https://www.elastic.co/guide/en/fleet/7.17/fleet-overview.html) 使用这些模板创建数据流。如果为 `false`，Elasticsearch 将禁用这些索引和组件模板。默认为 `true`。
+
+此设置影响以下内置索引模板：
+
+- `logs-*-*`
+- `metrics-*-*`
+- `synthetics-*-*`
+
+此设置也影响以下内置的组件模板：
+
+- `logs-mappings`
+- `logs-settings`
+- `metrics-mappings`
+- `metrics-settings`
+- `synthetics-mapping`
+- `synthetics-settings`
+
 # 升级 Elasticsearch
 
 # 索引模块
