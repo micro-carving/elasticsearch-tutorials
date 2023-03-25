@@ -107,7 +107,7 @@ Content-Type: application/json
   "_source": ["title"]
 }
 
-### 分页查询
+### 分页查询（from + size 浅分页）
 GET {{baseUrl}}/shopping/_search
 Content-Type: application/json
 
@@ -117,4 +117,25 @@ Content-Type: application/json
   },
   "from": 2,
   "size": 2
+}
+
+### 分页查询（scroll 深分页）
+GET {{baseUrl}}/shopping/_search?scroll=5m
+Content-Type: application/json
+
+{
+  "query": {
+    "match_all": {}
+  },
+  "from": 0,
+  "size": 2
+}
+
+### 分页查询（查询 scroll 下一页数据）
+GET {{baseUrl}}/_search/scroll
+Content-Type: application/json
+
+{
+  "scroll_id": "FGluY2x1ZGVfY29udGV4dF91dWlkDXF1ZXJ5QW5kRmV0Y2gBFm0zTUU4WHA2UUJDbnlPakt3SlV4Z2cAAAAAAANWHhZpaFhpY3BqalNoT1NNaXRmUnpVdlJB",
+  "scroll": "5m"
 }

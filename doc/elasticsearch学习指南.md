@@ -1368,6 +1368,8 @@ Content-Type: application/json
 
 #### from + size 浅分页
 
+"浅"分页可以理解为简单意义上的分页。它的原理很简单，就是查询前 20 条数据，然后截断前 10 条，只返回 10-20 的数据。这样其实白白浪费了前 10 条的查询。
+
 向 ES 服务器发 GET请求：`http://127.0.0.1:9200/shopping/_search` ，JSON 请求体如下：
 
 ```json
@@ -1380,7 +1382,140 @@ Content-Type: application/json
 }
 ```
 
+> **说明**
+>
+> 其中，`from` 定义了目标数据的偏移值，`size` 定义当前返回的数目。默认 `from` 为 0，`size` 为 2，即所有的查询默认仅仅返回前 2 条数据。
 
+服务器响应结果如下：
+
+```json
+{
+  "took": 299,
+  "timed_out": false,
+  "_shards": {
+    "total": 1,
+    "successful": 1,
+    "skipped": 0,
+    "failed": 0
+  },
+  "hits": {
+    "total": {
+      "value": 4,
+      "relation": "eq"
+    },
+    "max_score": 1.0,
+    "hits": [
+      {
+        "_index": "shopping",
+        "_type": "_doc",
+        "_id": "3",
+        "_score": 1.0,
+        "_source": {
+          "title": "华为手机",
+          "category": "华为",
+          "images": "http://www.gulixueyuan.com/hw.jpg",
+          "price": 4999.00
+        }
+      },
+      {
+        "_index": "shopping",
+        "_type": "_doc",
+        "_id": "4",
+        "_score": 1.0,
+        "_source": {
+          "title": "荣耀手机",
+          "category": "华为",
+          "images": "http://www.gulixueyuan.com/hw.jpg",
+          "price": 1999.00
+        }
+      }
+    ]
+  }
+}
+```
+
+> **扩展**
+>
+> **在这里有必要了解一下 from/size 的原理：**
+>
+> 因为 es 是基于分片的，假设有 5 个分片，`from=100,size=10`。则会根据排序规则从 5 个分片中各取回 100 条数据数据，然后汇总成 500 条数据后选择最后面的 10 条数据。
+>
+> 做过测试，越往后的分页，执行的效率越低。总体上会随着 from 的增加，消耗时间也会增加。而且数据量越大，就越明显！
+
+#### scroll 深分页
+
+`from + size` 查询在 10000-50000 条数据（1000 到 5000 页）以内的时候还是可以的，但是如果数据过多的话，就会出现**深分页**问题。
+
+为了解决上面的问题，elasticsearch 提出了一个 `scroll` 滚动的方式。
+
+`scroll` 类似于 `sql` 中的 `cursor`，使用 `scroll`，每次只能获取一页的内容，然后会返回一个 `scroll_id`。根据返回的这个 scroll_id 可以不断地获取下一页的内容，**所以 scroll 并不适用于有跳页的情景**。
+
+向 ES 服务器发 GET请求：`http://127.0.0.1:9200/shopping/_search?scroll=1m` ，JSON 请求体如下：
+
+```json
+{
+  "query": {
+    "match_all": {}
+  },
+  "from": 0,
+  "size": 2
+}
+```
+
+> **说明**
+>
+> 1. scroll=1m 表示 scroll_id 保留 1 分钟可用；
+> 2. 使用 scroll 必须要将 from 设置为 0；
+> 3. size 决定后面每次调用 _search 搜索返回的数量
+
+服务器响应结果如下：
+
+```json
+{
+  "_scroll_id": "FGluY2x1ZGVfY29udGV4dF91dWlkDXF1ZXJ5QW5kRmV0Y2gBFm0zTUU4WHA2UUJDbnlPakt3SlV4Z2cAAAAAAANTSRZpaFhpY3BqalNoT1NNaXRmUnpVdlJB",
+  "took": 436,
+  "timed_out": false,
+  "_shards": {
+    "total": 1,
+    "successful": 1,
+    "skipped": 0,
+    "failed": 0
+  },
+  "hits": {
+    "total": {
+      "value": 4,
+      "relation": "eq"
+    },
+    "max_score": 1.0,
+    "hits": [
+      {
+        "_index": "shopping",
+        "_type": "_doc",
+        "_id": "1",
+        "_score": 1.0,
+        "_source": {
+          "title": "小米手机",
+          "category": "小米",
+          "images": "http://www.gulixueyuan.com/xm.jpg",
+          "price": 2999.00
+        }
+      },
+      {
+        "_index": "shopping",
+        "_type": "_doc",
+        "_id": "2",
+        "_score": 1.0,
+        "_source": {
+          "title": "红米手机",
+          "category": "小米",
+          "images": "http://www.gulixueyuan.com/xm.jpg",
+          "price": 1999.00
+        }
+      }
+    ]
+  }
+}
+```
 
 # ElasticSearch 进阶
 
