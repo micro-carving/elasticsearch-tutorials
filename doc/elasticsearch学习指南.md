@@ -1464,9 +1464,9 @@ Content-Type: application/json
 
 > **说明**
 >
-> 1. scroll=1m 表示 scroll_id 保留 1 分钟可用；
-> 2. 使用 scroll 必须要将 from 设置为 0；
-> 3. size 决定后面每次调用 _search 搜索返回的数量
+> 1. `scroll=1m` 表示 `scroll_id` 保留 `1` 分钟可用；
+> 2. 使用 `scroll` 必须要将 `from` 设置为 `0`；
+> 3. `size` 决定后面每次调用 `_search` 搜索返回的数量
 
 服务器响应结果如下：
 
@@ -1516,6 +1516,38 @@ Content-Type: application/json
   }
 }
 ```
+
+然后我们可以通过数据返回的 `_scroll_id` 读取下一页内容，每次请求将会读取下 `2` 条（一开始 `size` 设置的为 `2`）数据，直到数据读取完毕或者 `scroll_id` 保留时间截止（也就是 `"scroll": "5m"`），示例代码如下：
+
+```http request
+### 分页查询（查询 scroll 下一页数据）
+GET {{baseUrl}}/_search/scroll
+Content-Type: application/json
+
+{
+  "scroll_id": "FGluY2x1ZGVfY29udGV4dF91dWlkDXF1ZXJ5QW5kRmV0Y2gBFm0zTUU4WHA2UUJDbnlPakt3SlV4Z2cAAAAAAANWHhZpaFhpY3BqalNoT1NNaXRmUnpVdlJB",
+  "scroll": "5m"
+}
+```
+
+> **注意**
+>
+> 请求的接口不再使用索引名了，而是 `_search/scroll`，其中 `GET` 和 `POST` 方法都可以使用。
+
+##### scroll 深分页删除
+
+根据官方文档的说法，`scroll` 的搜索上下文会在 `scroll` 的保留时间截止后自动清除，但是我们知道 `scroll` 是非常消耗资源的，所以一个建议就是当不需要了 `scroll` 数据的时候，尽可能快的把 `scroll_id` 显式删除掉。
+
+- 清除指定的 `scroll_id`
+```http request
+DELETE {{baseUrl}}/_search/scroll/FGluY2x1ZGVfY29udGV...
+```
+
+- 清除所有的 scroll
+```http request
+DELETE {{baseUrl}}/_search/scroll/_all
+```
+
 
 # ElasticSearch 进阶
 

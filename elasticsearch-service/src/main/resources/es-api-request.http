@@ -136,6 +136,12 @@ GET {{baseUrl}}/_search/scroll
 Content-Type: application/json
 
 {
-  "scroll_id": "FGluY2x1ZGVfY29udGV4dF91dWlkDXF1ZXJ5QW5kRmV0Y2gBFm0zTUU4WHA2UUJDbnlPakt3SlV4Z2cAAAAAAANWHhZpaFhpY3BqalNoT1NNaXRmUnpVdlJB",
+  "scroll_id": "FGluY2x1ZGVfY29udGV4dF91dWlkDXF1ZXJ5QW5kRmV0Y2gBFnJvdmFGQ2NqUjY2TU9heHN0OVhLT3cAAAAAAAAySRZpaFhpY3BqalNoT1NNaXRmUnpVdlJB",
   "scroll": "5m"
 }
+
+### 删除指定的 scroll
+DELETE {{baseUrl}}/_search/scroll/FGluY2x1ZGVfY29udGV4dF91dWlkDXF1ZXJ5QW5kRmV0Y2gBFnJvdmFGQ2NqUjY2TU9heHN0OVhLT3cAAAAAAAAySRZpaFhpY3BqalNoT1NNaXRmUnpVdlJB
+
+### 删除所有的 scroll
+DELETE {{baseUrl}}/_search/scroll/_all
