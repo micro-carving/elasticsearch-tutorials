@@ -145,3 +145,126 @@ DELETE {{baseUrl}}/_search/scroll/FGluY2x1ZGVfY29udGV4dF91dWlkDXF1ZXJ5QW5kRmV0Y2
 
 ### 删除所有的 scroll
 DELETE {{baseUrl}}/_search/scroll/_all
+
+### search_after 深分页
+GET {{baseUrl}}/shopping/_search
+Content-Type: application/json
+
+{
+  "query": {
+    "match_all": {}
+  },
+  "from": 0,
+  "size": 2,
+  "sort": [
+    {
+      "_id": {
+        "order": "desc"
+      }
+    }
+  ]
+}
+
+### search_after 深分页，查询下一页数据
+GET {{baseUrl}}/shopping/_search
+Content-Type: application/json
+
+{
+  "query": {
+    "match_all": {}
+  },
+  "from": 0,
+  "size": 2,
+  "search_after": [
+    3
+  ],
+  "sort": [
+    {
+      "_id": {
+        "order": "desc"
+      }
+    }
+  ]
+}
+
+### 查询排序
+GET {{baseUrl}}/shopping/_search
+Content-Type: application/json
+
+{
+  "query":{
+    "match_all":{}
+  },
+  "sort":{
+    "price":{
+      "order":"desc"
+    }
+  }
+}
+
+### 多条件查询（must 多条件查询）
+GET {{baseUrl}}/shopping/_search
+Content-Type: application/json
+
+{
+  "query":{
+    "bool":{
+      "must":[{
+        "match":{
+          "category":"华为"
+        }
+      },{
+        "match":{
+          "price":4999.00
+        }
+      }]
+    }
+  }
+}
+
+### 多条件查询（should 多条件查询）
+GET {{baseUrl}}/shopping/_search
+Content-Type: application/json
+
+{
+  "query":{
+    "bool":{
+      "should":[{
+        "match":{
+          "category":"小米"
+        }
+      },{
+        "match":{
+          "category":"华为"
+        }
+      }]
+    }
+  }
+}
+
+### 范围查询
+GET {{baseUrl}}/shopping/_search
+Content-Type: application/json
+
+{
+  "query":{
+    "bool":{
+      "should":[{
+        "match":{
+          "category":"小米"
+        }
+      },{
+        "match":{
+          "category":"华为"
+        }
+      }],
+      "filter":{
+        "range":{
+          "price":{
+            "gt": 2000
+          }
+        }
+      }
+    }
+  }
+}

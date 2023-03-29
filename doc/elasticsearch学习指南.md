@@ -1041,6 +1041,8 @@ POST /shopping/_bulk
 
 ![kibana的dev_tools控制台测试bulk批量混合操作文档数据](./assets/kibana的dev_tools控制台测试bulk批量混合操作文档数据.png)
 
+## 查询
+
 ### 条件查询
 
 准备 4 条数据，可以使用 [batch-create](../elasticsearch-service/src/main/resources/dataset/bulk/batch-create.json) 脚本新增数据；
@@ -1548,6 +1550,482 @@ DELETE {{baseUrl}}/_search/scroll/FGluY2x1ZGVfY29udGV...
 DELETE {{baseUrl}}/_search/scroll/_all
 ```
 
+#### search_after 深分页
+
+`scroll` 的方式，官方的建议不用于实时的请求（一般用于数据导出），因为每一个 `scroll_id` 不仅会占用大量的资源，而且会生成历史快照，对于数据的变更不会反映到快照上。
+
+`search_after` 分页的方式是根据上一页的最后一条数据来确定下一页的位置，同时在分页请求的过程中，如果有索引数据的增删改查，这些变更也会实时的反映到游标上。但是需要注意，因为每一页的数据依赖于上一页最后一条数据，所以无法跳页请求。
+
+**为了找到每一页最后一条数据，每个文档必须有一个全局唯一值，官方推荐使用 `_uid` 作为全局唯一值**，其实使用业务层的 `id` 也可以。
+
+```http request
+### search_after 深分页
+GET {{baseUrl}}/shopping/_search
+Content-Type: application/json
+
+{
+  "query": {
+    "match_all": {}
+  },
+  "from": 0,
+  "size": 2,
+  "sort": [
+    {
+      "_id": {
+        "order": "desc"
+      }
+    }
+  ]
+}
+```
+
+服务器响应结果如下：
+
+```json
+{
+  "took": 10,
+  "timed_out": false,
+  "_shards": {
+    "total": 1,
+    "successful": 1,
+    "skipped": 0,
+    "failed": 0
+  },
+  "hits": {
+    "total": {
+      "value": 4,
+      "relation": "eq"
+    },
+    "max_score": null,
+    "hits": [
+      {
+        "_index": "shopping",
+        "_type": "_doc",
+        "_id": "4",
+        "_score": null,
+        "_source": {
+          "title": "荣耀手机",
+          "category": "华为",
+          "images": "http://www.gulixueyuan.com/hw.jpg",
+          "price": 1999.00
+        },
+        "sort": [
+          "4"
+        ]
+      },
+      {
+        "_index": "shopping",
+        "_type": "_doc",
+        "_id": "3",
+        "_score": null,
+        "_source": {
+          "title": "华为手机",
+          "category": "华为",
+          "images": "http://www.gulixueyuan.com/hw.jpg",
+          "price": 4999.00
+        },
+        "sort": [
+          "3"
+        ]
+      }
+    ]
+  }
+}
+```
+
+> **注意**
+>
+> 1. 使用 `search_after` 必须要设置 `from=0`；
+> 2. 这里我使用 `timestamp` 和 `_id` 作为唯一值排序；
+> 3. 我们在返回的最后一条数据里拿到 `sort` 属性的值传入到 `search_after`。
+
+使用 `sort` 返回的值搜索下一页
+
+```http request
+### search_after 深分页，查询下一页数据
+GET {{baseUrl}}/shopping/_search
+Content-Type: application/json
+
+{
+  "query": {
+    "match_all": {}
+  },
+  "from": 0,
+  "size": 2,
+  "search_after": [
+    3
+  ],
+  "sort": [
+    {
+      "_id": {
+        "order": "desc"
+      }
+    }
+  ]
+}
+```
+
+#### 三种分页对比
+
+| 分页方式           | 	性能 | 	优点                       | 	缺点                                             | 	场景                 |
+|----------------|-----|---------------------------|-------------------------------------------------|---------------------|
+| `from + size`  | 低   | 灵活性好，实现简单                 | 	深度分页问题	                                        | 数据量比较小，能容忍深度分页问题    |
+| `scroll`	      | 中   | 	解决了深度分页问题	               | 无法反应数据的实时性（快照版本）维护成本高，需要维护一个 scroll_id	         | 海量数据的导出需要查询海量结果集的数据 |
+| `search_after` | 高   | 性能最好不存在深度分页问题能够反映数据的实时变更	 | 实现复杂，需要有一个全局唯一的字段连续分页的实现会比较复杂，因为每一次查询都需要上次查询的结果 | 	海量数据的分页            |
+
+### 查询排序
+
+如果你想通过排序查出价格最高的手机，向 ES 服务器发 GET 请求：`http://127.0.0.1:9200/shopping/_search` ，请求如下：
+
+```http request
+### 查询排序
+GET {{baseUrl}}/shopping/_search
+Content-Type: application/json
+
+{
+  "query":{
+    "match_all":{}
+  },
+  "sort":{
+    "price":{
+      "order":"desc"
+    }
+  }
+}
+```
+
+服务器响应结果如下：
+
+```json
+{
+  "took": 9,
+  "timed_out": false,
+  "_shards": {
+    "total": 1,
+    "successful": 1,
+    "skipped": 0,
+    "failed": 0
+  },
+  "hits": {
+    "total": {
+      "value": 4,
+      "relation": "eq"
+    },
+    "max_score": null,
+    "hits": [
+      {
+        "_index": "shopping",
+        "_type": "_doc",
+        "_id": "3",
+        "_score": null,
+        "_source": {
+          "title": "华为手机",
+          "category": "华为",
+          "images": "http://www.gulixueyuan.com/hw.jpg",
+          "price": 4999.00
+        },
+        "sort": [
+          4999.0
+        ]
+      },
+      {
+        "_index": "shopping",
+        "_type": "_doc",
+        "_id": "1",
+        "_score": null,
+        "_source": {
+          "title": "小米手机",
+          "category": "小米",
+          "images": "http://www.gulixueyuan.com/xm.jpg",
+          "price": 2999.00
+        },
+        "sort": [
+          2999.0
+        ]
+      },
+      {
+        "_index": "shopping",
+        "_type": "_doc",
+        "_id": "2",
+        "_score": null,
+        "_source": {
+          "title": "红米手机",
+          "category": "小米",
+          "images": "http://www.gulixueyuan.com/xm.jpg",
+          "price": 1999.00
+        },
+        "sort": [
+          1999.0
+        ]
+      },
+      {
+        "_index": "shopping",
+        "_type": "_doc",
+        "_id": "4",
+        "_score": null,
+        "_source": {
+          "title": "荣耀手机",
+          "category": "华为",
+          "images": "http://www.gulixueyuan.com/hw.jpg",
+          "price": 1999.00
+        },
+        "sort": [
+          1999.0
+        ]
+      }
+    ]
+  }
+}
+```
+
+### 多条件查询
+
+#### `must` 多条件查询
+
+假设想查询**华为**牌子，**同时**价格为 **4999** 元的手机信息。这里需要借助 `must` 字段，相当于编程语言中的 `&&` 与条件。
+
+向 ES 服务器发 GET 请求：`http://127.0.0.1:9200/shopping/_search` ，请求如下：
+
+```http request
+### 多条件查询
+GET {{baseUrl}}/shopping/_search
+Content-Type: application/json
+
+{
+  "query":{
+    "bool":{
+      "must":[{
+        "match":{
+          "category":"华为"
+        }
+      },{
+        "match":{
+          "price":4999.00
+        }
+      }]
+    }
+  }
+}
+```
+
+服务器响应结果如下：
+
+```json
+{
+  "took": 10,
+  "timed_out": false,
+  "_shards": {
+    "total": 1,
+    "successful": 1,
+    "skipped": 0,
+    "failed": 0
+  },
+  "hits": {
+    "total": {
+      "value": 1,
+      "relation": "eq"
+    },
+    "max_score": 2.3862944,
+    "hits": [
+      {
+        "_index": "shopping",
+        "_type": "_doc",
+        "_id": "3",
+        "_score": 2.3862944,
+        "_source": {
+          "title": "华为手机",
+          "category": "华为",
+          "images": "http://www.gulixueyuan.com/hw.jpg",
+          "price": 4999.00
+        }
+      }
+    ]
+  }
+}
+```
+
+#### `should` 多条件查询
+
+假设想查询类别为**华为**牌子，**或者**类别为**小米**牌子的手机信息。这里需要借助 `should` 字段，相当于编程语言中的 `||` 或条件。
+
+向 ES 服务器发 GET 请求：`http://127.0.0.1:9200/shopping/_search` ，请求如下：
+
+```http request
+### 多条件查询（should 多条件查询）
+GET {{baseUrl}}/shopping/_search
+Content-Type: application/json
+
+{
+  "query":{
+    "bool":{
+      "should":[{
+        "match":{
+          "category":"小米"
+        }
+      },{
+        "match":{
+          "category":"华为"
+        }
+      }]
+    }
+  }
+}
+```
+
+服务器响应结果如下：
+
+```json
+{
+  "took": 1,
+  "timed_out": false,
+  "_shards": {
+    "total": 1,
+    "successful": 1,
+    "skipped": 0,
+    "failed": 0
+  },
+  "hits": {
+    "total": {
+      "value": 4,
+      "relation": "eq"
+    },
+    "max_score": 1.3862942,
+    "hits": [
+      {
+        "_index": "shopping",
+        "_type": "_doc",
+        "_id": "1",
+        "_score": 1.3862942,
+        "_source": {
+          "title": "小米手机",
+          "category": "小米",
+          "images": "http://www.gulixueyuan.com/xm.jpg",
+          "price": 2999.00
+        }
+      },
+      {
+        "_index": "shopping",
+        "_type": "_doc",
+        "_id": "2",
+        "_score": 1.3862942,
+        "_source": {
+          "title": "红米手机",
+          "category": "小米",
+          "images": "http://www.gulixueyuan.com/xm.jpg",
+          "price": 1999.00
+        }
+      },
+      {
+        "_index": "shopping",
+        "_type": "_doc",
+        "_id": "3",
+        "_score": 1.3862942,
+        "_source": {
+          "title": "华为手机",
+          "category": "华为",
+          "images": "http://www.gulixueyuan.com/hw.jpg",
+          "price": 4999.00
+        }
+      },
+      {
+        "_index": "shopping",
+        "_type": "_doc",
+        "_id": "4",
+        "_score": 1.3862942,
+        "_source": {
+          "title": "荣耀手机",
+          "category": "华为",
+          "images": "http://www.gulixueyuan.com/hw.jpg",
+          "price": 1999.00
+        }
+      }
+    ]
+  }
+}
+```
+
+### 范围查询
+
+假设想查询**小米**和**华为**的牌子，**价格大于 2000 元**的手机。
+
+向 ES 服务器发 GET 请求：`http://127.0.0.1:9200/shopping/_search` ，请求如下：
+
+```http request
+### 范围查询
+GET {{baseUrl}}/shopping/_search
+Content-Type: application/json
+
+{
+  "query":{
+    "bool":{
+      "should":[{
+        "match":{
+          "category":"小米"
+        }
+      },{
+        "match":{
+          "category":"华为"
+        }
+      }],
+      "filter":{
+        "range":{
+          "price":{
+            "gt": 2000
+          }
+        }
+      }
+    }
+  }
+}
+```
+
+服务器响应结果如下：
+
+```json
+{
+  "took": 2,
+  "timed_out": false,
+  "_shards": {
+    "total": 1,
+    "successful": 1,
+    "skipped": 0,
+    "failed": 0
+  },
+  "hits": {
+    "total": {
+      "value": 2,
+      "relation": "eq"
+    },
+    "max_score": 1.3862942,
+    "hits": [
+      {
+        "_index": "shopping",
+        "_type": "_doc",
+        "_id": "1",
+        "_score": 1.3862942,
+        "_source": {
+          "title": "小米手机",
+          "category": "小米",
+          "images": "http://www.gulixueyuan.com/xm.jpg",
+          "price": 2999.00
+        }
+      },
+      {
+        "_index": "shopping",
+        "_type": "_doc",
+        "_id": "3",
+        "_score": 1.3862942,
+        "_source": {
+          "title": "华为手机",
+          "category": "华为",
+          "images": "http://www.gulixueyuan.com/hw.jpg",
+          "price": 4999.00
+        }
+      }
+    ]
+  }
+}
+```
 
 # ElasticSearch 进阶
 
