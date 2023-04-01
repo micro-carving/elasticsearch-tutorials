@@ -1,6 +1,7 @@
 ### 验证 ES
 GET {{baseUrl}}
 
+############ 索引操作 ############
 ### 创建 shopping 索引
 PUT {{baseUrl}}/shopping
 
@@ -13,6 +14,8 @@ GET {{baseUrl}}/shopping
 ### 删除单个索引
 DELETE {{baseUrl}}/shopping
 
+
+############ 文档操作 ############
 ### 创建文档（此方式不能使用 PUT；自动生成唯一标识，可以指定，比如：xxx/shopping/_doc/1，此方式可以使用 PUT）
 POST {{baseUrl}}/shopping/_doc
 Content-Type: application/json
@@ -71,6 +74,7 @@ Content-Type: application/json
 DELETE {{baseUrl}}/shopping/_doc/1
 
 
+############ 查询操作 ############
 ### 条件查询（URL带参查询）
 GET {{baseUrl}}/shopping/_search?q=category:小米
 
@@ -104,7 +108,9 @@ Content-Type: application/json
   "query": {
     "match_all": {}
   },
-  "_source": ["title"]
+  "_source": [
+    "title"
+  ]
 }
 
 ### 分页查询（from + size 浅分页）
@@ -192,12 +198,12 @@ GET {{baseUrl}}/shopping/_search
 Content-Type: application/json
 
 {
-  "query":{
-    "match_all":{}
+  "query": {
+    "match_all": {}
   },
-  "sort":{
-    "price":{
-      "order":"desc"
+  "sort": {
+    "price": {
+      "order": "desc"
     }
   }
 }
@@ -207,17 +213,20 @@ GET {{baseUrl}}/shopping/_search
 Content-Type: application/json
 
 {
-  "query":{
-    "bool":{
-      "must":[{
-        "match":{
-          "category":"华为"
+  "query": {
+    "bool": {
+      "must": [
+        {
+          "match": {
+            "category": "华为"
+          }
+        },
+        {
+          "match": {
+            "price": 4999.00
+          }
         }
-      },{
-        "match":{
-          "price":4999.00
-        }
-      }]
+      ]
     }
   }
 }
@@ -227,17 +236,20 @@ GET {{baseUrl}}/shopping/_search
 Content-Type: application/json
 
 {
-  "query":{
-    "bool":{
-      "should":[{
-        "match":{
-          "category":"小米"
+  "query": {
+    "bool": {
+      "should": [
+        {
+          "match": {
+            "category": "小米"
+          }
+        },
+        {
+          "match": {
+            "category": "华为"
+          }
         }
-      },{
-        "match":{
-          "category":"华为"
-        }
-      }]
+      ]
     }
   }
 }
@@ -247,24 +259,217 @@ GET {{baseUrl}}/shopping/_search
 Content-Type: application/json
 
 {
-  "query":{
-    "bool":{
-      "should":[{
-        "match":{
-          "category":"小米"
+  "query": {
+    "bool": {
+      "should": [
+        {
+          "match": {
+            "category": "小米"
+          }
+        },
+        {
+          "match": {
+            "category": "华为"
+          }
         }
-      },{
-        "match":{
-          "category":"华为"
-        }
-      }],
-      "filter":{
-        "range":{
-          "price":{
+      ],
+      "filter": {
+        "range": {
+          "price": {
             "gt": 2000
           }
         }
       }
+    }
+  }
+}
+
+### 全文检索
+GET {{baseUrl}}/shopping/_search
+Content-Type: application/json
+
+{
+  "query": {
+    "match": {
+      "category": "小华"
+    }
+  }
+}
+
+### 全匹配
+GET {{baseUrl}}/shopping/_search
+Content-Type: application/json
+
+{
+  "query": {
+    "match_phrase": {
+      "category": "为"
+    }
+  }
+}
+
+### 高亮查询
+GET {{baseUrl}}/shopping/_search
+Content-Type: application/json
+
+{
+  "query": {
+    "match_phrase": {
+      "category": "为"
+    }
+  },
+  "highlight": {
+    "fields": {
+      "category": {}
+    }
+  }
+}
+
+### 聚合查询-分组（group by）
+GET {{baseUrl}}/shopping/_search
+Content-Type: application/json
+
+{
+  "aggs": {
+    "price_group": {
+      "terms": {
+        "field": "price"
+      }
+    }
+  },
+  "size": 0
+}
+
+### 聚合查询-平均值（avg）
+GET {{baseUrl}}/shopping/_search
+Content-Type: application/json
+
+{
+  "aggs": {
+    "price_avg": {
+      "avg": {
+        "field": "price"
+      }
+    }
+  },
+  "size": 0
+}
+
+### 聚合查询-最大值与最小值（max,min）
+GET {{baseUrl}}/shopping/_search
+Content-Type: application/json
+
+{
+  "aggs": {
+    "price_max": {
+      "max": {
+        "field": "price"
+      }
+    },
+    "price_min": {
+      "min": {
+        "field": "price"
+      }
+    }
+  },
+  "size": 0
+}
+
+############ 映射操作 ############
+### 创建 user 索引
+PUT {{baseUrl}}/user
+
+### 创建映射
+PUT {{baseUrl}}/user/_mapping
+Content-Type: application/json
+
+{
+  "properties": {
+    "name": {
+      "type": "text",
+      "index": true
+    },
+    "sex": {
+      "type": "keyword",
+      "index": true
+    },
+    "tel": {
+      "type": "keyword",
+      "index": false
+    }
+  }
+}
+
+### 查询所有映射
+GET {{baseUrl}}/_mapping
+
+### 查询指定映射
+GET {{baseUrl}}/user/_mapping
+
+### 新增映射数据
+PUT {{baseUrl}}/user/_create/1001
+Content-Type: application/json
+
+{
+  "name":"小明",
+  "sex":"男",
+  "tel":"18312345678"
+}
+
+### 修改映射数据
+POST {{baseUrl}}/user/_update/1001
+Content-Type: application/json
+
+{
+  "doc": {
+    "sex": "男的"
+  }
+}
+
+### 查询指定条件映射数据（查找 name 含有 ”小“ 的信息数据）
+GET {{baseUrl}}/user/_search
+Content-Type: application/json
+
+{
+  "query": {
+    "match": {
+      "name": "小"
+    }
+  }
+}
+
+### 查询指定条件映射数据（查找 sex 含有 ”男“ 的信息数据）
+GET {{baseUrl}}/user/_search
+Content-Type: application/json
+
+{
+  "query": {
+    "match": {
+      "sex": "男"
+    }
+  }
+}
+
+### 查询指定条件映射数据（查找 sex 含有 ”男的“ 的信息数据）
+GET {{baseUrl}}/user/_search
+Content-Type: application/json
+
+{
+  "query": {
+    "match": {
+      "sex": "男的"
+    }
+  }
+}
+
+### 查询指定条件映射数据（查找 tel 是 “18312345678” 的信息数据）
+GET {{baseUrl}}/user/_search
+Content-Type: application/json
+
+{
+  "query": {
+    "match": {
+      "tel": "18312345678"
     }
   }
 }

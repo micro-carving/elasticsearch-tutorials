@@ -2027,6 +2027,959 @@ Content-Type: application/json
 }
 ```
 
+### 全文检索
+
+这功能像搜索引擎那样，如品牌输入“小华”，返回结果带回品牌有“小米”和”华为“的信息。
+
+向 ES 服务器发 GET 请求：`http://127.0.0.1:9200/shopping/_search` ，请求如下：
+
+```http request
+### 全文检索
+GET {{baseUrl}}/shopping/_search
+Content-Type: application/json
+
+{
+  "query":{
+    "match":{
+      "category" : "小华"
+    }
+  }
+}
+```
+
+服务器响应结果如下：
+
+```json
+{
+  "took": 1,
+  "timed_out": false,
+  "_shards": {
+    "total": 1,
+    "successful": 1,
+    "skipped": 0,
+    "failed": 0
+  },
+  "hits": {
+    "total": {
+      "value": 4,
+      "relation": "eq"
+    },
+    "max_score": 0.6931471,
+    "hits": [
+      {
+        "_index": "shopping",
+        "_type": "_doc",
+        "_id": "1",
+        "_score": 0.6931471,
+        "_source": {
+          "title": "小米手机",
+          "category": "小米",
+          "images": "http://www.gulixueyuan.com/xm.jpg",
+          "price": 2999.00
+        }
+      },
+      {
+        "_index": "shopping",
+        "_type": "_doc",
+        "_id": "2",
+        "_score": 0.6931471,
+        "_source": {
+          "title": "红米手机",
+          "category": "小米",
+          "images": "http://www.gulixueyuan.com/xm.jpg",
+          "price": 1999.00
+        }
+      },
+      {
+        "_index": "shopping",
+        "_type": "_doc",
+        "_id": "3",
+        "_score": 0.6931471,
+        "_source": {
+          "title": "华为手机",
+          "category": "华为",
+          "images": "http://www.gulixueyuan.com/hw.jpg",
+          "price": 4999.00
+        }
+      },
+      {
+        "_index": "shopping",
+        "_type": "_doc",
+        "_id": "4",
+        "_score": 0.6931471,
+        "_source": {
+          "title": "荣耀手机",
+          "category": "华为",
+          "images": "http://www.gulixueyuan.com/hw.jpg",
+          "price": 1999.00
+        }
+      }
+    ]
+  }
+}
+```
+
+### 全匹配
+
+向 ES 服务器发 GET 请求：`http://127.0.0.1:9200/shopping/_search` ，请求如下：
+
+```http request
+### 全匹配
+GET {{baseUrl}}/shopping/_search
+Content-Type: application/json
+
+{
+  "query":{
+    "match_phrase":{
+      "category" : "为"
+    }
+  }
+}
+```
+
+服务器响应结果如下：
+
+```json
+{
+  "took": 1,
+  "timed_out": false,
+  "_shards": {
+    "total": 1,
+    "successful": 1,
+    "skipped": 0,
+    "failed": 0
+  },
+  "hits": {
+    "total": {
+      "value": 2,
+      "relation": "eq"
+    },
+    "max_score": 0.6931471,
+    "hits": [
+      {
+        "_index": "shopping",
+        "_type": "_doc",
+        "_id": "3",
+        "_score": 0.6931471,
+        "_source": {
+          "title": "华为手机",
+          "category": "华为",
+          "images": "http://www.gulixueyuan.com/hw.jpg",
+          "price": 4999.00
+        }
+      },
+      {
+        "_index": "shopping",
+        "_type": "_doc",
+        "_id": "4",
+        "_score": 0.6931471,
+        "_source": {
+          "title": "荣耀手机",
+          "category": "华为",
+          "images": "http://www.gulixueyuan.com/hw.jpg",
+          "price": 1999.00
+        }
+      }
+    ]
+  }
+}
+```
+
+### 高亮查询
+
+高亮查询中使用 `<em></em>` 来高亮查询指定的全匹配关键词。
+
+向 ES 服务器发 GET 请求：`http://127.0.0.1:9200/shopping/_search` ，请求如下：
+
+```http request
+### 高亮查询
+GET {{baseUrl}}/shopping/_search
+Content-Type: application/json
+
+{
+  "query":{
+    "match_phrase":{
+      "category" : "为"
+    }
+  },
+  "highlight":{
+    "fields":{
+      "category":{}
+    }
+  }
+}
+```
+
+服务器响应结果如下：
+
+```json
+{
+  "took": 35,
+  "timed_out": false,
+  "_shards": {
+    "total": 1,
+    "successful": 1,
+    "skipped": 0,
+    "failed": 0
+  },
+  "hits": {
+    "total": {
+      "value": 2,
+      "relation": "eq"
+    },
+    "max_score": 0.6931471,
+    "hits": [
+      {
+        "_index": "shopping",
+        "_type": "_doc",
+        "_id": "3",
+        "_score": 0.6931471,
+        "_source": {
+          "title": "华为手机",
+          "category": "华为",
+          "images": "http://www.gulixueyuan.com/hw.jpg",
+          "price": 4999.00
+        },
+        "highlight": {
+          "category": [
+            "华<em>为</em>"
+          ]
+        }
+      },
+      {
+        "_index": "shopping",
+        "_type": "_doc",
+        "_id": "4",
+        "_score": 0.6931471,
+        "_source": {
+          "title": "荣耀手机",
+          "category": "华为",
+          "images": "http://www.gulixueyuan.com/hw.jpg",
+          "price": 1999.00
+        },
+        "highlight": {
+          "category": [
+            "华<em>为</em>"
+          ]
+        }
+      }
+    ]
+  }
+}
+```
+
+### 聚合查询
+
+聚合允许使用者对 es 文档进行统计分析，类似与关系型数据库中的 `group by`，当然还有很多其他的聚合，例如取最大值 `max` 、平均值 `avg` 等等。
+
+#### 分组（group by）
+
+按 **price** 字段进行分组，向 ES 服务器发 GET 请求：`http://127.0.0.1:9200/shopping/_search` ，请求如下：
+
+```http request
+### 聚合查询-分组（group by）
+GET {{baseUrl}}/shopping/_search
+Content-Type: application/json
+
+{
+  "aggs":{
+    "price_group":{
+      "terms":{
+        "field":"price"
+      }
+    }
+  }
+}
+```
+
+> **说明**
+> 
+> - `aggs` 聚合操作
+> - `price_group` 分组名称，可以随意起
+> - `terms` 分组项
+> - `filed` 分组字段
+
+服务器响应结果如下：
+
+```json
+{
+  "took": 5,
+  "timed_out": false,
+  "_shards": {
+    "total": 1,
+    "successful": 1,
+    "skipped": 0,
+    "failed": 0
+  },
+  "hits": {
+    "total": {
+      "value": 4,
+      "relation": "eq"
+    },
+    "max_score": 1.0,
+    "hits": [
+      {
+        "_index": "shopping",
+        "_type": "_doc",
+        "_id": "1",
+        "_score": 1.0,
+        "_source": {
+          "title": "小米手机",
+          "category": "小米",
+          "images": "http://www.gulixueyuan.com/xm.jpg",
+          "price": 2999.00
+        }
+      },
+      {
+        "_index": "shopping",
+        "_type": "_doc",
+        "_id": "2",
+        "_score": 1.0,
+        "_source": {
+          "title": "红米手机",
+          "category": "小米",
+          "images": "http://www.gulixueyuan.com/xm.jpg",
+          "price": 1999.00
+        }
+      },
+      {
+        "_index": "shopping",
+        "_type": "_doc",
+        "_id": "3",
+        "_score": 1.0,
+        "_source": {
+          "title": "华为手机",
+          "category": "华为",
+          "images": "http://www.gulixueyuan.com/hw.jpg",
+          "price": 4999.00
+        }
+      },
+      {
+        "_index": "shopping",
+        "_type": "_doc",
+        "_id": "4",
+        "_score": 1.0,
+        "_source": {
+          "title": "荣耀手机",
+          "category": "华为",
+          "images": "http://www.gulixueyuan.com/hw.jpg",
+          "price": 1999.00
+        }
+      }
+    ]
+  },
+  "aggregations": {
+    "price_group": {
+      "doc_count_error_upper_bound": 0,
+      "sum_other_doc_count": 0,
+      "buckets": [
+        {
+          "key": 1999.0,
+          "doc_count": 2
+        },
+        {
+          "key": 2999.0,
+          "doc_count": 1
+        },
+        {
+          "key": 4999.0,
+          "doc_count": 1
+        }
+      ]
+    }
+  }
+}
+```
+
+上面返回结果会附带原始数据的。若想要不附带原始数据的结果，请增加 `"size": 0` 条件字段。如下请求：
+
+```http request
+### 聚合查询-分组（group by）
+GET {{baseUrl}}/shopping/_search
+Content-Type: application/json
+
+{
+  "aggs":{
+    "price_group":{
+      "terms":{
+        "field":"price"
+      }
+    }
+  },
+  "size":0
+}
+```
+
+服务器响应结果如下：
+
+```json
+{
+  "took": 1,
+  "timed_out": false,
+  "_shards": {
+    "total": 1,
+    "successful": 1,
+    "skipped": 0,
+    "failed": 0
+  },
+  "hits": {
+    "total": {
+      "value": 4,
+      "relation": "eq"
+    },
+    "max_score": null,
+    "hits": []
+  },
+  "aggregations": {
+    "price_group": {
+      "doc_count_error_upper_bound": 0,
+      "sum_other_doc_count": 0,
+      "buckets": [
+        {
+          "key": 1999.0,
+          "doc_count": 2
+        },
+        {
+          "key": 2999.0,
+          "doc_count": 1
+        },
+        {
+          "key": 4999.0,
+          "doc_count": 1
+        }
+      ]
+    }
+  }
+}
+```
+
+#### 平均值
+
+按 **price** 字段进行求平均值，向 ES 服务器发 GET 请求：`http://127.0.0.1:9200/shopping/_search` ，请求如下：
+
+```http request
+### 聚合查询-平均值（avg）
+GET {{baseUrl}}/shopping/_search
+Content-Type: application/json
+
+{
+  "aggs":{
+    "price_avg":{
+      "avg":{
+        "field":"price"
+      }
+    }
+  },
+  "size":0
+}
+```
+
+> **说明**
+>
+> - `aggs` 聚合操作
+> - `price_avg` 分组名称，可以随意起
+> - `avg` 求平均值
+> - `filed` 字段
+
+服务器响应结果如下：
+
+```json
+{
+  "took": 0,
+  "timed_out": false,
+  "_shards": {
+    "total": 1,
+    "successful": 1,
+    "skipped": 0,
+    "failed": 0
+  },
+  "hits": {
+    "total": {
+      "value": 4,
+      "relation": "eq"
+    },
+    "max_score": null,
+    "hits": []
+  },
+  "aggregations": {
+    "price_avg": {
+      "value": 2999.0
+    }
+  }
+}
+```
+
+#### 最大值与最小值
+
+按 **price** 字段取最大值与最小值，向 ES 服务器发 GET 请求：`http://127.0.0.1:9200/shopping/_search` ，请求如下：
+
+```http request
+### 聚合查询-最大值与最小值（max,min）
+GET {{baseUrl}}/shopping/_search
+Content-Type: application/json
+
+{
+  "aggs":{
+    "price_max":{
+      "max":{
+        "field":"price"
+      }
+    },
+    "price_min":{
+      "min":{
+        "field":"price"
+      }
+    }
+  },
+  "size":0
+}
+```
+
+服务器响应结果如下：
+
+```json
+{
+  "took": 1,
+  "timed_out": false,
+  "_shards": {
+    "total": 1,
+    "successful": 1,
+    "skipped": 0,
+    "failed": 0
+  },
+  "hits": {
+    "total": {
+      "value": 4,
+      "relation": "eq"
+    },
+    "max_score": null,
+    "hits": []
+  },
+  "aggregations": {
+    "price_min": {
+      "value": 1999.0
+    },
+    "price_max": {
+      "value": 4999.0
+    }
+  }
+}
+```
+
+## 映射
+
+有了索引库，等于有了数据库中的 `database`。
+
+接下来就需要建索引库（`index`）中的映射了，类似于数据库（`database`）中的表结构（`table`）。
+
+创建数据库表需要设置字段名称，类型，长度，约束等；索引库也一样，需要知道这个类型下有哪些字段，每个字段有哪些约束信息，这就叫做映射（`mapping`）。
+
+### 创建映射
+
+创建 **user** 索引，向 ES 服务器发 PUT 请求：`http://127.0.0.1:9200/user` ，请求如下：
+
+```http request
+### 创建 user 索引
+PUT {{baseUrl}}/user
+```
+
+服务器响应结果如下：
+
+```json
+{
+  "acknowledged": true,
+  "shards_acknowledged": true,
+  "index": "user"
+}
+```
+
+为 **user** 索引创建新的映射，向 ES 服务器发 PUT 请求：`http://127.0.0.1:9200/user/_mapping` ，请求如下：
+
+```http request
+### 创建映射
+PUT {{baseUrl}}/user/_mapping
+Content-Type: application/json
+
+{
+  "properties": {
+    "name": {
+      "type": "text",
+      "index": true
+    },
+    "sex": {
+      "type": "keyword",
+      "index": true
+    },
+    "tel": {
+      "type": "keyword",
+      "index": false
+    }
+  }
+}
+```
+
+> **说明**
+> 
+> - text：类型适用于需要被全文检索的字段，例如新闻正文、邮件内容等比较长的文字。text 类型会被 Lucene 分词器（Analyzer）处理为一个个词项，并使用 Lucene 倒排索引存储。text 字段不能被用于排序。如果需要使用该类型的字段只需要在定义映射时指定 JSON 中对应字段的 type 为 text。
+> - keyword：适合简短、结构化字符串，例如主机名、姓名、商品名称等，可以用于过滤、排序、聚合检索，也可以用于精确查询。
+> - index：索引字段，是否能被搜索，默认为 `true`
+
+服务器响应结果如下：
+
+```json
+{
+  "acknowledged": true
+}
+```
+
+### 查询映射
+
+#### 查询所有映射
+
+向 ES 服务器发 GET 请求：`http://127.0.0.1:9200/_mapping` ，请求如下：
+
+```http request
+### 查询所有映射
+GET {{baseUrl}}/_mapping
+```
+
+服务器响应结果如下：
+
+```json
+{
+  "account": {},
+  "shopping": {},
+  "user": {},
+  ".apm-agent-configuration": {},
+  ".kibana_7.17.9_001": {},
+  ".tasks": {},
+  ".kibana_task_manager_7.17.9_001": {},
+  ".apm-custom-link": {}
+}
+```
+
+> **说明**
+> 
+> 由于查询全部映射数据量信息较多，这里就不完全展示。
+
+#### 查询指定映射
+
+向 ES 服务器发 GET 请求：`http://127.0.0.1:9200/user/_mapping` ，请求如下：
+
+```http request
+### 查询指定映射
+GET {{baseUrl}}/user/_mapping
+```
+
+服务器响应结果如下：
+
+```json
+{
+  "user": {
+    "mappings": {
+      "properties": {
+        "name": {
+          "type": "text"
+        },
+        "sex": {
+          "type": "keyword"
+        },
+        "tel": {
+          "type": "keyword",
+          "index": false
+        }
+      }
+    }
+  }
+}
+```
+
+#### 映射案例
+
+关于下面的新增映射数据、修改映射数据以及删除映射数据的操作与文档操作中增改删操作类似，下面不再重复赘述。
+
+##### 新增映射数据
+
+向 ES 服务器发 PUT 请求：`http://127.0.0.1:9200/user/_create/1001` ，请求如下：
+
+```http request
+### 新增映射数据
+PUT {{baseUrl}}/user/_create/1001
+Content-Type: application/json
+
+{
+  "name":"小明",
+  "sex":"男的",
+  "tel":"18312345678"
+}
+```
+
+服务器响应结果如下：
+
+```json
+{
+  "_index": "user",
+  "_type": "_doc",
+  "_id": "1001",
+  "_version": 1,
+  "result": "created",
+  "_shards": {
+    "total": 2,
+    "successful": 1,
+    "failed": 0
+  },
+  "_seq_no": 0,
+  "_primary_term": 1
+}
+```
+
+##### 修改映射数据
+
+把上一步骤中新增的用户映射数据中的 `sex` 字段从 “男” 改成 “男的”。
+
+向 ES 服务器发 POST 请求：`http://127.0.0.1:9200/user/_update/1001` ，请求如下：
+
+```http request
+### 修改映射数据
+POST {{baseUrl}}/user/_update/1001
+Content-Type: application/json
+
+{
+  "doc": {
+    "sex": "男的"
+  }
+}
+```
+
+服务器响应结果如下：
+
+```json
+{
+  "_index": "user",
+  "_type": "_doc",
+  "_id": "1001",
+  "_version": 2,
+  "result": "updated",
+  "_shards": {
+    "total": 2,
+    "successful": 1,
+    "failed": 0
+  },
+  "_seq_no": 1,
+  "_primary_term": 1
+}
+```
+
+##### 查询指定条件映射数据
+
+上一步骤已经完成了映射数据的新增和修改操作，接下来进行查询操作。
+
+###### 查找 name 含有 ”小“ 的信息数据
+
+向 ES 服务器发 GET 请求：`http://127.0.0.1:9200/user/_search` ，请求如下：
+
+```http request
+### 查询指定条件映射数据
+GET {{baseUrl}}/user/_search
+Content-Type: application/json
+
+{
+  "query": {
+    "match": {
+      "name": "小"
+    }
+  }
+}
+```
+
+服务器响应结果如下：
+
+```json
+{
+  "took": 0,
+  "timed_out": false,
+  "_shards": {
+    "total": 1,
+    "successful": 1,
+    "skipped": 0,
+    "failed": 0
+  },
+  "hits": {
+    "total": {
+      "value": 1,
+      "relation": "eq"
+    },
+    "max_score": 0.2876821,
+    "hits": [
+      {
+        "_index": "user",
+        "_type": "_doc",
+        "_id": "1001",
+        "_score": 0.2876821,
+        "_source": {
+          "name": "小明",
+          "sex": "男",
+          "tel": "18312345678"
+        }
+      }
+    ]
+  }
+}
+```
+
+###### 查找 sex 含有 ”男“ 的信息数据
+
+向 ES 服务器发 GET 请求：`http://127.0.0.1:9200/user/_search` ，请求如下：
+
+```http request
+### 查询指定条件映射数据（查找 sex 含有 ”男“ 的信息数据）
+GET {{baseUrl}}/user/_search
+Content-Type: application/json
+
+{
+  "query": {
+    "match": {
+      "sex": "男"
+    }
+  }
+}
+```
+
+服务器响应结果如下：
+
+```json
+{
+  "took": 0,
+  "timed_out": false,
+  "_shards": {
+    "total": 1,
+    "successful": 1,
+    "skipped": 0,
+    "failed": 0
+  },
+  "hits": {
+    "total": {
+      "value": 0,
+      "relation": "eq"
+    },
+    "max_score": null,
+    "hits": []
+  }
+}
+```
+
+响应结果中没有出现我们查询结果信息，只因创建映射时 `"sex"` 的 `type` 为 `"keyword"`。
+
+`"sex"` 只能完全为 ”男的“，才能得出原数据，请求如下：
+
+```http request
+### 查询指定条件映射数据（查找 sex 含有 ”男的“ 的信息数据）
+GET {{baseUrl}}/user/_search
+Content-Type: application/json
+
+{
+  "query": {
+    "match": {
+      "sex": "男的"
+    }
+  }
+}
+```
+
+服务器响应结果如下：
+
+```json
+{
+  "took": 0,
+  "timed_out": false,
+  "_shards": {
+    "total": 1,
+    "successful": 1,
+    "skipped": 0,
+    "failed": 0
+  },
+  "hits": {
+    "total": {
+      "value": 1,
+      "relation": "eq"
+    },
+    "max_score": 0.2876821,
+    "hits": [
+      {
+        "_index": "user",
+        "_type": "_doc",
+        "_id": "1001",
+        "_score": 0.2876821,
+        "_source": {
+          "name": "小明",
+          "sex": "男的",
+          "tel": "18312345678"
+        }
+      }
+    ]
+  }
+}
+```
+
+###### 查找 tel 是 “18312345678” 的信息数据
+
+向 ES 服务器发 GET 请求：`http://127.0.0.1:9200/user/_search` ，请求如下：
+
+```http request
+### 查询指定条件映射数据（查找 tel 是 “18312345678” 的信息数据）
+GET {{baseUrl}}/user/_search
+Content-Type: application/json
+
+{
+  "query": {
+    "match": {
+      "tel": "18312345678"
+    }
+  }
+}
+```
+
+服务器响应结果如下：
+
+```json
+{
+  "error": {
+    "root_cause": [
+      {
+        "type": "query_shard_exception",
+        "reason": "failed to create query: Cannot search on field [tel] since it is not indexed.",
+        "index_uuid": "STtI7jZvRvqy9zvvYbBtNg",
+        "index": "user"
+      }
+    ],
+    "type": "search_phase_execution_exception",
+    "reason": "all shards failed",
+    "phase": "query",
+    "grouped": true,
+    "failed_shards": [
+      {
+        "shard": 0,
+        "index": "user",
+        "node": "ihXicpjjShOSMitfRzUvRA",
+        "reason": {
+          "type": "query_shard_exception",
+          "reason": "failed to create query: Cannot search on field [tel] since it is not indexed.",
+          "index_uuid": "STtI7jZvRvqy9zvvYbBtNg",
+          "index": "user",
+          "caused_by": {
+            "type": "illegal_argument_exception",
+            "reason": "Cannot search on field [tel] since it is not indexed."
+          }
+        }
+      }
+    ]
+  },
+  "status": 400
+}
+```
+
+响应结果中出现异常，只因创建映射时 `"tel"` 的 `"index"` 为 `false`。
+
 # ElasticSearch 进阶
 
 # ElasticSearch 集成
@@ -2038,3 +2991,4 @@ Content-Type: application/json
 - [https://www.bilibili.com/video/BV1hh411D7sb](https://www.bilibili.com/video/BV1hh411D7sb)
 - [https://blog.csdn.net/u011863024/article/details/115721328](https://blog.csdn.net/u011863024/article/details/115721328)
 - [https://blog.csdn.net/ChengHuanHuaning/article/details/117696054](https://blog.csdn.net/ChengHuanHuaning/article/details/117696054)
+- [https://blog.csdn.net/abc123lzf/article/details/102957060](https://blog.csdn.net/abc123lzf/article/details/102957060)
