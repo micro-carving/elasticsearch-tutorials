@@ -2980,6 +2980,34 @@ Content-Type: application/json
 
 响应结果中出现异常，只因创建映射时 `"tel"` 的 `"index"` 为 `false`。
 
+## JavaAPI
+
+### API 环境准备
+
+添加 Maven 的 POM 坐标依赖，如下：
+
+```xml
+<project>
+  <dependencies>
+    <!-- elasticsearch-java sdk 依赖-->
+    <!-- https://www.elastic.co/guide/en/elasticsearch/client/java-api-client/7.17/installation.html -->
+    <dependency>
+      <groupId>co.elastic.clients</groupId>
+      <artifactId>elasticsearch-java</artifactId>
+      <version>7.17.9</version>
+    </dependency>
+
+    <dependency>
+      <groupId>com.fasterxml.jackson.core</groupId>
+      <artifactId>jackson-databind</artifactId>
+      <version>2.12.3</version>
+    </dependency>
+  </dependencies>
+</project>
+```
+
+
+
 # ElasticSearch 进阶
 
 # ElasticSearch 集成
