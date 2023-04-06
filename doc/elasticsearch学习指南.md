@@ -2984,6 +2984,12 @@ Content-Type: application/json
 
 ### API 环境准备
 
+在 ES 7.15.0 版本之后，ES 官方将它的高级客户端 [RestHighLevelClient 标记为**弃用**状态](https://www.elastic.co/guide/en/elasticsearch/client/java-rest/7.17/_changing_the_client_8217_s_initialization_code.html)。同时推出了全新的 java API 客户端 Elasticsearch Java API Client，该客户端也将在 Elasticsearch8.0 及以后版本中成为官方推荐使用的客户端。
+
+#### Elasticsearch Java API Client 使用
+
+##### 添加依赖
+
 添加 Maven 的 POM 坐标依赖，如下：
 
 ```xml
@@ -3002,11 +3008,141 @@ Content-Type: application/json
       <artifactId>jackson-databind</artifactId>
       <version>2.12.3</version>
     </dependency>
+
+    <!-- 解决提示异常：java.lang.NoClassDefFoundError: jakarta/json/JsonException -->
+    <dependency>
+      <groupId>jakarta.json</groupId>
+      <artifactId>jakarta.json-api</artifactId>
+      <version>2.0.1</version>
+    </dependency>
+
+    <dependency>
+      <groupId>org.springframework.boot</groupId>
+      <artifactId>spring-boot-starter-web</artifactId>
+      <version>2.7.8</version>
+    </dependency>
+
+    <dependency>
+      <groupId>org.springframework.boot</groupId>
+      <artifactId>spring-boot-starter-test</artifactId>
+      <version>2.7.8</version>
+      <scope>test</scope>
+    </dependency>
   </dependencies>
 </project>
 ```
 
+##### 客户端连接测试
 
+准备好依赖之后，编写 SpringBoot 测试类，测试类代码如下：
+
+```java
+import co.elastic.clients.elasticsearch.ElasticsearchClient;
+import co.elastic.clients.json.jackson.JacksonJsonpMapper;
+import co.elastic.clients.transport.ElasticsearchTransport;
+import co.elastic.clients.transport.endpoints.BooleanResponse;
+import co.elastic.clients.transport.rest_client.RestClientTransport;
+import org.apache.http.HttpHost;
+import org.elasticsearch.client.RestClient;
+import org.junit.jupiter.api.Test;
+import org.springframework.boot.test.context.SpringBootTest;
+
+import java.io.IOException;
+
+@SpringBootTest
+public class ElasticSearchDemoTests {
+
+  // 创建低级客户端
+  private final RestClient restClient = RestClient.builder(
+                  new HttpHost("localhost", 9200))
+          .build();
+  
+  // 使用 Jackson 映射器创建传输层
+  private final ElasticsearchTransport transport = new RestClientTransport(
+          restClient, new JacksonJsonpMapper());
+
+  // 创建 API 客户端
+  private final ElasticsearchClient client = new ElasticsearchClient(transport);
+
+  @Test
+  void testConnect() throws IOException {
+    // API 响应值，状态码 （1xx, 2xx 和 3xx 是 true 但是 4xx 是 false）
+    final BooleanResponse ping = client.ping();
+    System.out.println("ES 的 API 响应结果为：" + ping.value());
+    closeClient();
+  }
+
+  /**
+   * 关闭传输层和客户端
+   *
+   * @throws IOException IO异常
+   */
+  private void closeClient() throws IOException {
+    // 关闭 ES 客户端
+    transport.close();
+    restClient.close();
+  }
+}
+```
+
+输出结果如下：
+
+```text
+2023-04-06 12:41:25.186  WARN 11104 --- [           main] org.elasticsearch.client.RestClient      : request [HEAD http://localhost:9200/] returned 1 warnings: [299 Elasticsearch-7.17.9-ef48222227ee6b9e70e502f0f0daa52435ee634d "Elasticsearch built-in security features are not enabled. Without authentication, your cluster could be accessible to anyone. See https://www.elastic.co/guide/en/elasticsearch/reference/7.17/security-minimal-setup.html to enable security."]
+ES 的 API 响应结果为：true
+```
+
+### API 索引
+
+#### 创建索引
+
+这里通过 API 创建索引名称为 “order” 的索引，示例代码如下：
+
+```java
+@SpringBootTest
+public class ElasticSearchDemoTests {
+
+  //  ...
+
+  @Test
+  void testCreateIndex() throws IOException {
+    final CreateIndexResponse createIndexResponse = client.indices().create(builder -> builder.index("order"));
+    final boolean acknowledged = createIndexResponse.acknowledged();
+    System.out.println("ES 的 API 创建索引的响应结果为：" + acknowledged);
+    closeClient();
+  }
+}
+```
+
+输出结果如下：
+
+```text
+ES 的 API 创建索引的响应结果为：true
+```
+
+#### 查询索引
+
+查询上一步创建好的 “order” 索引信息，示例代码如下：
+
+```java
+@SpringBootTest
+public class ElasticSearchDemoTests {
+
+  //  ...
+  @Test
+  void testGetIndex() throws IOException {
+    final GetIndexResponse indexResponse = client.indices().get(builder -> builder.index("order"));
+    final Map<String, IndexState> result = indexResponse.result();
+    System.out.println("ES 的 API 获取索引的响应结果为：" + result);
+  }
+}
+```
+
+输出结果如下：
+
+```text
+ES 的 API 获取索引的响应结果为：{order=IndexState: {"aliases":{},"mappings":{},"settings":{"index":{"number_of_shards":"1","number_of_replicas":"1","routing":{"allocation":{"include":{"_tier_preference":"data_content"}}},"provided_name":"order","creation_date":"1680773665064","uuid":"k0G_yulUSIq5z6Ko3kNd8A","version":{"created":"7170999"}}}}}
+```
 
 # ElasticSearch 进阶
 
@@ -3020,3 +3156,4 @@ Content-Type: application/json
 - [https://blog.csdn.net/u011863024/article/details/115721328](https://blog.csdn.net/u011863024/article/details/115721328)
 - [https://blog.csdn.net/ChengHuanHuaning/article/details/117696054](https://blog.csdn.net/ChengHuanHuaning/article/details/117696054)
 - [https://blog.csdn.net/abc123lzf/article/details/102957060](https://blog.csdn.net/abc123lzf/article/details/102957060)
+- [https://blog.csdn.net/b___w/article/details/123924063](https://blog.csdn.net/b___w/article/details/123924063)
