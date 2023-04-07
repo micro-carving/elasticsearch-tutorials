@@ -3092,7 +3092,7 @@ public class ElasticSearchDemoTests {
 ES 的 API 响应结果为：true
 ```
 
-### API 索引
+### API 索引操作
 
 #### 创建索引
 
@@ -3143,6 +3143,50 @@ public class ElasticSearchDemoTests {
 ```text
 ES 的 API 获取索引的响应结果为：{order=IndexState: {"aliases":{},"mappings":{},"settings":{"index":{"number_of_shards":"1","number_of_replicas":"1","routing":{"allocation":{"include":{"_tier_preference":"data_content"}}},"provided_name":"order","creation_date":"1680773665064","uuid":"k0G_yulUSIq5z6Ko3kNd8A","version":{"created":"7170999"}}}}}
 ```
+
+> **注意**
+> 
+> 如果查询的索引不存在，控制台会输出 `co.elastic.clients.elasticsearch._types.ElasticsearchException: [es/indices.get] failed: [index_not_found_exception] no such index [xxx]` 异常信息
+
+#### 删除索引
+
+这里把上一步查询的 “order”索引信息进行删除，示例代码如下：
+
+```java
+@SpringBootTest
+public class ElasticSearchDemoTests {
+
+  // ...  
+  @Test
+  void testDeleteIndex() throws IOException {
+    final DeleteIndexResponse deleteIndexResponse = client.indices().delete(builder -> builder.index("order"));
+    final boolean acknowledged = deleteIndexResponse.acknowledged();
+    System.out.println("ES 的 API 删除索引的响应结果为：" + acknowledged);
+    closeClient();
+  }
+}
+```
+
+输出结果如下：
+
+```text
+ES 的 API 删除索引的响应结果为：true
+```
+
+再次查询 “order”索引信息，输出结果如下：
+
+```text
+co.elastic.clients.elasticsearch._types.ElasticsearchException: [es/indices.get] failed: [index_not_found_exception] no such index [order]
+...
+```
+
+从输出的结果可知，我们已经成功将其删除。
+
+### API 文档操作
+
+#### 创建文档
+
+
 
 # ElasticSearch 进阶
 

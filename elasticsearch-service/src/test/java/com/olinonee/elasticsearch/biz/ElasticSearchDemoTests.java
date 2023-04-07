@@ -2,6 +2,7 @@ package com.olinonee.elasticsearch.biz;
 
 import co.elastic.clients.elasticsearch.ElasticsearchClient;
 import co.elastic.clients.elasticsearch.indices.CreateIndexResponse;
+import co.elastic.clients.elasticsearch.indices.DeleteIndexResponse;
 import co.elastic.clients.elasticsearch.indices.GetIndexResponse;
 import co.elastic.clients.elasticsearch.indices.IndexState;
 import co.elastic.clients.json.jackson.JacksonJsonpMapper;
@@ -61,6 +62,14 @@ public class ElasticSearchDemoTests {
         final GetIndexResponse indexResponse = client.indices().get(builder -> builder.index("order"));
         final Map<String, IndexState> result = indexResponse.result();
         System.out.println("ES 的 API 获取索引的响应结果为：" + result);
+    }
+
+    @Test
+    void testDeleteIndex() throws IOException {
+        final DeleteIndexResponse deleteIndexResponse = client.indices().delete(builder -> builder.index("order"));
+        final boolean acknowledged = deleteIndexResponse.acknowledged();
+        System.out.println("ES 的 API 删除索引的响应结果为：" + acknowledged);
+        closeClient();
     }
 
     /**
