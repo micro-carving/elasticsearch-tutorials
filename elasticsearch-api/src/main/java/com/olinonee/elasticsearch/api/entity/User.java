@@ -18,6 +18,6 @@ import lombok.experimental.Accessors;
 @Accessors(chain = true)
 public class User {
     private String name;
-    private Integer sex;
-    private Integer age;
+    private String sex;
+    private String tel;
 }

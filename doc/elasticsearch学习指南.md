@@ -3186,7 +3186,168 @@ co.elastic.clients.elasticsearch._types.ElasticsearchException: [es/indices.get]
 
 #### 创建文档
 
+##### 查询 `user` 文档索引及所有数据
 
+在进行文档的操作之前，我们先来查询一下是否存在对应的操作的索引信息以及存在的数据，以 `user` 为例：
+
+- **查询索引信息**
+
+向 ES 服务器发 GET 请求：`http://127.0.0.1:9200/user` ，请求如下：
+
+```http request
+### 查询 user 索引
+GET {{baseUrl}}/user
+Content-Type: application/json
+```
+
+服务器响应结果如下：
+
+```json
+{
+  "user": {
+    "aliases": {},
+    "mappings": {
+      "properties": {
+        "name": {
+          "type": "text"
+        },
+        "sex": {
+          "type": "keyword"
+        },
+        "tel": {
+          "type": "keyword",
+          "index": false
+        }
+      }
+    },
+    "settings": {
+      "index": {
+        "routing": {
+          "allocation": {
+            "include": {
+              "_tier_preference": "data_content"
+            }
+          }
+        },
+        "number_of_shards": "1",
+        "provided_name": "user",
+        "creation_date": "1680238424301",
+        "number_of_replicas": "1",
+        "uuid": "STtI7jZvRvqy9zvvYbBtNg",
+        "version": {
+          "created": "7170999"
+        }
+      }
+    }
+  }
+}
+```
+
+- **查询所有数据**
+
+向 ES 服务器发 GET 请求：`http://127.0.0.1:9200/user/_search` ，请求如下：
+
+```http request
+### 查询 user 文档数据
+GET {{baseUrl}}/user/_search
+Content-Type: application/json
+
+{
+  "query": {
+    "match_all": {}
+  }
+}
+```
+
+服务器响应结果如下：
+
+```json
+{
+  "took": 0,
+  "timed_out": false,
+  "_shards": {
+    "total": 1,
+    "successful": 1,
+    "skipped": 0,
+    "failed": 0
+  },
+  "hits": {
+    "total": {
+      "value": 1,
+      "relation": "eq"
+    },
+    "max_score": 1.0,
+    "hits": [
+      {
+        "_index": "user",
+        "_type": "_doc",
+        "_id": "1001",
+        "_score": 1.0,
+        "_source": {
+          "name": "小明",
+          "sex": "男的",
+          "tel": "18312345678"
+        }
+      }
+    ]
+  }
+}
+```
+
+##### 创建文档实体
+
+从上述查询的 `user` 文档索引及所有数据的响应结果，可以看出我们需要新建一个 `User` 实体类，用于作为文档操作的实体封装，示例代码如下：
+
+```java
+@Data
+@NoArgsConstructor
+@AllArgsConstructor
+@Accessors(chain = true)
+public class User {
+  private String name;
+  private String sex;
+  private String tel;
+}
+```
+
+##### 编写测试方法
+
+这里通过 API 向之前已经建好的 user 索引中新增数据，示例代码如下：
+
+```java
+@SpringBootTest
+public class ElasticSearchDemoTests {
+  @Test
+  void testCreateDocument() throws IOException {
+    final CreateResponse createResponse = client.create(builder ->
+            builder.index("user")
+                    .id("1002")
+                    .document(new User("小芳", "女", "17712345678")));
+    System.out.println("ES 的 API 创建文档的响应结果为：" + createResponse.result());
+    closeClient();
+  }
+}
+```
+
+输出结果如下：
+
+```text
+ES 的 API 创建文档的响应结果为：Created
+```
+
+再次执行查询 `user` 索引下的数据，发现已经新增成功！
+
+```http request
+### 查询 user 文档数据
+GET {{baseUrl}}/user/_search
+Content-Type: application/json
+
+{
+  "query": {
+    "match_all": {}
+  }
+}
+```
 
 # ElasticSearch 进阶
 

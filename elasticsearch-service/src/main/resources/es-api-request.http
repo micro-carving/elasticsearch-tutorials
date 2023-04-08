@@ -473,3 +473,19 @@ Content-Type: application/json
     }
   }
 }
+
+
+############ API文档操作 ############
+### 查询 user 索引
+GET {{baseUrl}}/user
+Content-Type: application/json
+
+### 查询 user 文档数据
+GET {{baseUrl}}/user/_search
+Content-Type: application/json
+
+{
+  "query": {
+    "match_all": {}
+  }
+}

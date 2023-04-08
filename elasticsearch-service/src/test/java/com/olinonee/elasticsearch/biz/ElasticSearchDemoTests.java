@@ -1,6 +1,7 @@
 package com.olinonee.elasticsearch.biz;
 
 import co.elastic.clients.elasticsearch.ElasticsearchClient;
+import co.elastic.clients.elasticsearch.core.CreateResponse;
 import co.elastic.clients.elasticsearch.indices.CreateIndexResponse;
 import co.elastic.clients.elasticsearch.indices.DeleteIndexResponse;
 import co.elastic.clients.elasticsearch.indices.GetIndexResponse;
@@ -9,6 +10,7 @@ import co.elastic.clients.json.jackson.JacksonJsonpMapper;
 import co.elastic.clients.transport.ElasticsearchTransport;
 import co.elastic.clients.transport.endpoints.BooleanResponse;
 import co.elastic.clients.transport.rest_client.RestClientTransport;
+import com.olinonee.elasticsearch.api.entity.User;
 import org.apache.http.HttpHost;
 import org.elasticsearch.client.RestClient;
 import org.junit.jupiter.api.Test;
@@ -31,7 +33,7 @@ public class ElasticSearchDemoTests {
 
     // 创建低级客户端
     private final RestClient restClient = RestClient.builder(
-            new HttpHost("localhost", 9200))
+                    new HttpHost("localhost", 9200))
             .build();
 
     // 使用 Jackson 映射器创建传输层
@@ -69,6 +71,16 @@ public class ElasticSearchDemoTests {
         final DeleteIndexResponse deleteIndexResponse = client.indices().delete(builder -> builder.index("order"));
         final boolean acknowledged = deleteIndexResponse.acknowledged();
         System.out.println("ES 的 API 删除索引的响应结果为：" + acknowledged);
+        closeClient();
+    }
+
+    @Test
+    void testCreateDocument() throws IOException {
+        final CreateResponse createResponse = client.create(builder ->
+                builder.index("user")
+                        .id("1002")
+                        .document(new User("小芳", "女", "17712345678")));
+        System.out.println("ES 的 API 创建文档的响应结果为：" + createResponse.result());
         closeClient();
     }
 
