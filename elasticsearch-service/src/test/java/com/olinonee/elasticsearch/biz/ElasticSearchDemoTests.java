@@ -2,6 +2,9 @@ package com.olinonee.elasticsearch.biz;
 
 import co.elastic.clients.elasticsearch.ElasticsearchClient;
 import co.elastic.clients.elasticsearch.core.CreateResponse;
+import co.elastic.clients.elasticsearch.core.DeleteResponse;
+import co.elastic.clients.elasticsearch.core.GetResponse;
+import co.elastic.clients.elasticsearch.core.UpdateResponse;
 import co.elastic.clients.elasticsearch.indices.CreateIndexResponse;
 import co.elastic.clients.elasticsearch.indices.DeleteIndexResponse;
 import co.elastic.clients.elasticsearch.indices.GetIndexResponse;
@@ -17,6 +20,7 @@ import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.SpringBootTest;
 
 import java.io.IOException;
+import java.util.HashMap;
 import java.util.Map;
 
 /**
@@ -81,6 +85,31 @@ public class ElasticSearchDemoTests {
                         .id("1002")
                         .document(new User("小芳", "女", "17712345678")));
         System.out.println("ES 的 API 创建文档的响应结果为：" + createResponse.result());
+        closeClient();
+    }
+
+    @Test
+    void testQueryDocument() throws IOException {
+        final GetResponse<User> getResponse = client.get(builder -> builder.index("user").id("1003"), User.class);
+        System.out.println("ES 的 API 查询文档的响应结果为：" + getResponse.source());
+        closeClient();
+    }
+
+    @Test
+    void testUpdateDocument() throws IOException {
+        // 使用集合封装需要修改的内容
+        Map<String, Object> userInfoMap = new HashMap<>();
+        userInfoMap.put("name", "小丽");
+
+        final UpdateResponse<User> updateResponse = client.update(builder -> builder.index("user").id("1002").doc(userInfoMap), User.class);
+        System.out.println("ES 的 API 修改文档的响应结果为：" + updateResponse.result());
+        closeClient();
+    }
+
+    @Test
+    void testDeleteDocument() throws IOException {
+        final DeleteResponse deleteResponse = client.delete(builder -> builder.index("user").id("1003"));
+        System.out.println("ES 的 API 删除文档的响应结果为：" + deleteResponse.result());
         closeClient();
     }
 

@@ -3349,6 +3349,89 @@ Content-Type: application/json
 }
 ```
 
+#### 查询文档
+
+这里**查询** `user` 索引下的 `id` 为 “1002” 的数据信息，示例代码如下：
+
+```java
+@SpringBootTest
+public class ElasticSearchDemoTests {
+  @Test
+  void testQueryDocument() throws IOException {
+    final GetResponse<User> getResponse = client.get(builder -> builder.index("user").id("1002"), User.class);
+    System.out.println("ES 的 API 查询文档的响应结果为：" + getResponse.source());
+    closeClient();
+  }
+}
+```
+
+输出结果如下：
+
+```text
+ES 的 API 查询文档的响应结果为：User(name=小芳, sex=女, tel=17712345678)
+```
+
+> **注意**
+> 
+> 如果查不到对应的字段值（比如：id 为 1003 不存在）控制台输出 `null`，避免后续使用中发生 `NullPointerException` 异常。
+
+#### 修改文档
+
+把 `user` 索引下的 `name` 为 “小芳” **修改**为 “小丽”，示例代码如下：
+
+```java
+@SpringBootTest
+public class ElasticSearchDemoTests {
+  @Test
+  void testUpdateDocument() throws IOException {
+    // 使用集合封装需要修改的内容
+    Map<String, Object> userInfoMap = new HashMap<>();
+    userInfoMap.put("name", "小丽");
+
+    final UpdateResponse<User> updateResponse = client.update(builder -> builder.index("user").id("1002").doc(userInfoMap), User.class);
+    System.out.println("ES 的 API 修改文档的响应结果为：" + updateResponse.result());
+    closeClient();
+  }
+}
+```
+
+输出结果如下：
+
+```text
+ES 的 API 修改文档的响应结果为：Updated
+```
+
+> **注意**
+>
+> 如果修改的文档信息不存在，控制台会输出 `co.elastic.clients.elasticsearch._types.ElasticsearchException: [es/update] failed: [document_missing_exception] [_doc][10023]: document missing` 等异常信息。
+
+#### 删除文档
+
+这里**删除** `user` 索引下的 `id` 为 “1002” 的数据信息，示例代码如下：
+
+```java
+@SpringBootTest
+public class ElasticSearchDemoTests {
+  @Test
+  void testDeleteDocument() throws IOException {
+    final DeleteResponse deleteResponse = client.delete(builder -> builder.index("user").id("1002"));
+    System.out.println("ES 的 API 删除文档的响应结果为：" + deleteResponse.result());
+    closeClient();
+  } 
+}
+```
+
+输出结果如下：
+
+```text
+ES 的 API 删除文档的响应结果为：Deleted
+```
+
+> **注意**
+>
+> 如果修改的文档信息不存在，控制台会输出 `NotFound` 。
+
+
 # ElasticSearch 进阶
 
 # ElasticSearch 集成
