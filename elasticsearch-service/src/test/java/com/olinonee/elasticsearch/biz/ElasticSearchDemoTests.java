@@ -1,10 +1,8 @@
 package com.olinonee.elasticsearch.biz;
 
 import co.elastic.clients.elasticsearch.ElasticsearchClient;
-import co.elastic.clients.elasticsearch.core.CreateResponse;
-import co.elastic.clients.elasticsearch.core.DeleteResponse;
-import co.elastic.clients.elasticsearch.core.GetResponse;
-import co.elastic.clients.elasticsearch.core.UpdateResponse;
+import co.elastic.clients.elasticsearch.core.*;
+import co.elastic.clients.elasticsearch.core.bulk.BulkOperation;
 import co.elastic.clients.elasticsearch.indices.CreateIndexResponse;
 import co.elastic.clients.elasticsearch.indices.DeleteIndexResponse;
 import co.elastic.clients.elasticsearch.indices.GetIndexResponse;
@@ -20,7 +18,9 @@ import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.SpringBootTest;
 
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -110,6 +110,49 @@ public class ElasticSearchDemoTests {
     void testDeleteDocument() throws IOException {
         final DeleteResponse deleteResponse = client.delete(builder -> builder.index("user").id("1003"));
         System.out.println("ES 的 API 删除文档的响应结果为：" + deleteResponse.result());
+        closeClient();
+    }
+
+    @Test
+    void testBatchAddDocument() throws IOException {
+        // 构建一个批量数据集合
+        List<BulkOperation> list = new ArrayList<>();
+        list.add(new BulkOperation.Builder().create(
+                builder -> builder
+                        .id("1003")
+                        .document(new User("小强", "男", "17812345678")))
+                .build());
+        list.add(new BulkOperation.Builder().create(
+                        builder -> builder
+                                .id("1004")
+                                .document(new User("晓彤", "女", "18112345678")))
+                .build());
+        list.add(new BulkOperation.Builder().create(
+                        builder -> builder
+                                .id("1005")
+                                .document(new User("小李", "男", "15512345678")))
+                .build());
+        // 调用 bulk 方法执行批量插入操作
+        final BulkResponse bulkResponse = client.bulk(builder -> builder.index("user").operations(list));
+        System.out.println("ES 的 API 批量添加文档的响应结果为：" + bulkResponse.items());
+        closeClient();
+    }
+
+    @Test
+    void testBatchDeleteDocument() throws IOException {
+        // 构建一个批量数据集合
+        List<BulkOperation> list = new ArrayList<>();
+        list.add(new BulkOperation.Builder().delete(
+                builder -> builder
+                        .id("1004"))
+                .build());
+        list.add(new BulkOperation.Builder().delete(
+                        builder -> builder
+                                .id("1005"))
+                .build());
+        // 调用 bulk 方法执行批量删除操作
+        final BulkResponse bulkResponse = client.bulk(builder -> builder.index("user").operations(list));
+        System.out.println("ES 的 API 批量删除文档的响应结果为：" + bulkResponse.items());
         closeClient();
     }
 

@@ -3429,7 +3429,80 @@ ES 的 API 删除文档的响应结果为：Deleted
 
 > **注意**
 >
-> 如果修改的文档信息不存在，控制台会输出 `NotFound` 。
+> 如果删除的文档信息不存在，控制台会输出 `NotFound` 。
+
+#### 批量添加文档
+
+之前有提到文档的创建，但是这种方式添加数据的效率太慢了，我们采用批量添加文档方式用于提高数据的插入效率，示例代码如下：
+
+```java
+@SpringBootTest
+public class ElasticSearchDemoTests {
+  @Test
+  void testBatchAddDocument() throws IOException {
+    // 构建一个批量数据集合
+    List<BulkOperation> list = new ArrayList<>();
+    list.add(new BulkOperation.Builder().create(
+                    builder -> builder
+                            .id("1003")
+                            .document(new User("小强", "男", "17812345678")))
+            .build());
+    list.add(new BulkOperation.Builder().create(
+                    builder -> builder
+                            .id("1004")
+                            .document(new User("晓彤", "女", "18112345678")))
+            .build());
+    list.add(new BulkOperation.Builder().create(
+                    builder -> builder
+                            .id("1005")
+                            .document(new User("小李", "男", "15512345678")))
+            .build());
+    // 调用 bulk 方法执行批量插入操作
+    final BulkResponse bulkResponse = client.bulk(builder -> builder.index("user").operations(list));
+    System.out.println("ES 的 API 批量添加文档的响应结果为：" + bulkResponse.items());
+    closeClient();
+  }
+}
+```
+
+输出结果如下：
+
+```text
+ES 的 API 批量添加文档的响应结果为：[BulkResponseItem: {"create":{"_id":"1003","_index":"user","status":201,"_primary_term":3,"result":"created","_seq_no":6,"_shards":{"failed":0.0,"successful":1.0,"total":2.0},"_type":"_doc","_version":1}}, BulkResponseItem: {"create":{"_id":"1004","_index":"user","status":201,"_primary_term":3,"result":"created","_seq_no":7,"_shards":{"failed":0.0,"successful":1.0,"total":2.0},"_type":"_doc","_version":1}}, BulkResponseItem: {"create":{"_id":"1005","_index":"user","status":201,"_primary_term":3,"result":"created","_seq_no":8,"_shards":{"failed":0.0,"successful":1.0,"total":2.0},"_type":"_doc","_version":1}}]
+```
+
+批量添加的核心是需要构建一个泛型为 `BulkOperation` 的 `ArrayList` 集合，实质上是将多个请求包装到一个集合中，进行统一请求，进行构建请求时调用 `bulk` 方法，实现批量添加效果。
+
+#### 批量删除文档
+
+之前有提到文档的删除，但是这种方式删除数据的效率太慢了，我们采用批量删除文档方式用于提高数据的删除效率，示例代码如下：
+
+```java
+@SpringBootTest
+public class ElasticSearchDemoTests {
+  @Test
+  void testBatchDeleteDocument() throws IOException {
+    // 构建一个批量数据集合
+    List<BulkOperation> list = new ArrayList<>();
+    list.add(new BulkOperation.Builder().delete(
+                    builder -> builder
+                            .id("1004"))
+            .build());
+    list.add(new BulkOperation.Builder().delete(
+                    builder -> builder
+                            .id("1005"))
+            .build());
+    // 调用 bulk 方法执行批量删除操作
+    final BulkResponse bulkResponse = client.bulk(builder -> builder.index("user").operations(list));
+    System.out.println("ES 的 API 批量删除文档的响应结果为：" + bulkResponse.items());
+    closeClient();
+  }
+}
+```
+
+> **注意**
+>
+> 注意和批量新增操作的区别，批量新增构建的数据用的是 `create` 方法，而批量删除用的是 `delete` 方法。
 
 
 # ElasticSearch 进阶
