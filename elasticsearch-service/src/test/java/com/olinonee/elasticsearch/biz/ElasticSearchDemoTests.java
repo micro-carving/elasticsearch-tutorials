@@ -3,6 +3,8 @@ package com.olinonee.elasticsearch.biz;
 import co.elastic.clients.elasticsearch.ElasticsearchClient;
 import co.elastic.clients.elasticsearch.core.*;
 import co.elastic.clients.elasticsearch.core.bulk.BulkOperation;
+import co.elastic.clients.elasticsearch.core.search.Hit;
+import co.elastic.clients.elasticsearch.core.search.HitsMetadata;
 import co.elastic.clients.elasticsearch.indices.CreateIndexResponse;
 import co.elastic.clients.elasticsearch.indices.DeleteIndexResponse;
 import co.elastic.clients.elasticsearch.indices.GetIndexResponse;
@@ -153,6 +155,20 @@ public class ElasticSearchDemoTests {
         // 调用 bulk 方法执行批量删除操作
         final BulkResponse bulkResponse = client.bulk(builder -> builder.index("user").operations(list));
         System.out.println("ES 的 API 批量删除文档的响应结果为：" + bulkResponse.items());
+        closeClient();
+    }
+
+    @Test
+    void testFullQueryDocument() throws IOException {
+        final SearchResponse<User> searchResponse = client.search(builder -> builder.index("user").query(q -> q.matchAll(item -> item)), User.class);
+        final HitsMetadata<User> hitsMetadata = searchResponse.hits();
+        for (Hit<User> hit : hitsMetadata.hits()) {
+            final User user = hit.source();
+            System.out.println("user -> " + user);
+        }
+        assert hitsMetadata.total() != null;
+        final long total = hitsMetadata.total().value();
+        System.out.println("ES 的 API 全量查询文档的数据总数为：" + total);
         closeClient();
     }
 

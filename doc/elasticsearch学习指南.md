@@ -3500,10 +3500,46 @@ public class ElasticSearchDemoTests {
 }
 ```
 
+输出结果如下：
+
+```text
+ES 的 API 批量删除文档的响应结果为：[BulkResponseItem: {"delete":{"_id":"1004","_index":"user","status":200,"_primary_term":3,"result":"deleted","_seq_no":15,"_shards":{"failed":0.0,"successful":1.0,"total":2.0},"_type":"_doc","_version":3}}, BulkResponseItem: {"delete":{"_id":"1005","_index":"user","status":200,"_primary_term":3,"result":"deleted","_seq_no":16,"_shards":{"failed":0.0,"successful":1.0,"total":2.0},"_type":"_doc","_version":3}}]
+```
+
 > **注意**
 >
 > 注意和批量新增操作的区别，批量新增构建的数据用的是 `create` 方法，而批量删除用的是 `delete` 方法。
 
+#### 全量查询文档
+
+全量查询 “user” 索引下的所有数据，示例代码如下：
+
+```java
+@SpringBootTest
+public class ElasticSearchDemoTests {
+  @Test
+  void testFullQueryDocument() throws IOException {
+    final SearchResponse<User> searchResponse = client.search(builder -> builder.index("user").query(q -> q.matchAll(item -> item)), User.class);
+    final HitsMetadata<User> hitsMetadata = searchResponse.hits();
+    for (Hit<User> hit : hitsMetadata.hits()) {
+      final User user = hit.source();
+      System.out.println("user -> " + user);
+    }
+    assert hitsMetadata.total() != null;
+    final long total = hitsMetadata.total().value();
+    System.out.println("ES 的 API 全量查询文档的数据总数为：" + total);
+    closeClient();
+  }
+}
+```
+
+输出的结果如下：
+
+```text
+user -> User(name=小明, sex=男的, tel=18312345678)
+user -> User(name=小强, sex=男, tel=17812345678)
+ES 的 API 全量查询文档的数据总数为：2
+```
 
 # ElasticSearch 进阶
 
