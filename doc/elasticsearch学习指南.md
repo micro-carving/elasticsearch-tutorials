@@ -3510,7 +3510,7 @@ ES 的 API 批量删除文档的响应结果为：[BulkResponseItem: {"delete":{
 >
 > 注意和批量新增操作的区别，批量新增构建的数据用的是 `create` 方法，而批量删除用的是 `delete` 方法。
 
-#### 全量查询文档
+#### 全量查询
 
 全量查询 “user” 索引下的所有数据，示例代码如下：
 
@@ -3539,6 +3539,70 @@ public class ElasticSearchDemoTests {
 user -> User(name=小明, sex=男的, tel=18312345678)
 user -> User(name=小强, sex=男, tel=17812345678)
 ES 的 API 全量查询文档的数据总数为：2
+```
+
+#### 分页查询
+
+分页查询就是在全量查询的基础上增加了从第几条开始，每页显示几条。分页查询 “user” 索引下的数据，示例代码如下：
+
+```java
+@SpringBootTest
+public class ElasticSearchDemoTests {
+  @Test
+  void testPagingQueryDocument() throws IOException{
+    final SearchResponse<User> searchResponse = client.search(builder -> builder.index("user")
+            .query(q -> q.matchAll(item -> item))
+            .from(1)
+            .size(2), User.class);
+    searchResponse.hits().hits().forEach(userHit -> System.out.println("user -> " + userHit.source()));
+    assert searchResponse.hits().total() != null;
+    System.out.println("ES 的 API 分页查询文档的数据为：" + searchResponse.hits().hits());
+    closeClient();
+  }
+}
+```
+
+输出的结果如下：
+
+```text
+user -> User(name=小李, sex=男, tel=15512345678)
+user -> User(name=小明, sex=男的, tel=18312345678)
+ES 的 API 分页查询文档的数据为：[Hit: {"_index":"user","_id":"1005","_score":1.0,"_type":"_doc","_source":"User(name=小李, sex=男, tel=15512345678)"}, Hit: {"_index":"user","_id":"1001","_score":1.0,"_type":"_doc","_source":"User(name=小明, sex=男的, tel=18312345678)"}]
+```
+
+> **注意**
+> 
+> `from` 默认是从 `0` 开始，`0` 表示第一页，`size` 表示当前查询显示数据条数，在之前 ES API 中已经说过了。
+
+#### 查询排序
+
+根据 `tel` 字段**降序**，查询 “user” 索引下的数据，示例代码如下：
+
+```java
+@SpringBootTest
+public class ElasticSearchDemoTests {
+  @Test
+  void testSortQueryDocument() throws IOException {
+    final SearchResponse<User> searchResponse = client.search(builder -> builder.index("user")
+            .query(q -> q.matchAll(item -> item))
+            .sort(s -> s.field(f -> f.field("tel")
+                    .order(SortOrder.Desc))), User.class);
+    searchResponse.hits().hits().forEach(userHit -> System.out.println("user -> " + userHit.source()));
+    assert searchResponse.hits().total() != null;
+    System.out.println("ES 的 API 查询排序的数据为：" + searchResponse.hits().hits());
+    closeClient();
+  }
+}
+```
+
+输出结果如下：
+
+```text
+user -> User(name=小明, sex=男的, tel=18312345678)
+user -> User(name=晓彤, sex=女, tel=18112345678)
+user -> User(name=小强, sex=男, tel=17812345678)
+user -> User(name=小李, sex=男, tel=15512345678)
+ES 的 API 查询排序的数据为：[Hit: {"_index":"user","_id":"1001","_type":"_doc","_source":"User(name=小明, sex=男的, tel=18312345678)","sort":["18312345678"]}, Hit: {"_index":"user","_id":"1004","_type":"_doc","_source":"User(name=晓彤, sex=女, tel=18112345678)","sort":["18112345678"]}, Hit: {"_index":"user","_id":"1003","_type":"_doc","_source":"User(name=小强, sex=男, tel=17812345678)","sort":["17812345678"]}, Hit: {"_index":"user","_id":"1005","_type":"_doc","_source":"User(name=小李, sex=男, tel=15512345678)","sort":["15512345678"]}]
 ```
 
 # ElasticSearch 进阶

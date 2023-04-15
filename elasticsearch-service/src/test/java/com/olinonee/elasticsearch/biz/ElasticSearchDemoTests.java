@@ -1,6 +1,7 @@
 package com.olinonee.elasticsearch.biz;
 
 import co.elastic.clients.elasticsearch.ElasticsearchClient;
+import co.elastic.clients.elasticsearch._types.SortOrder;
 import co.elastic.clients.elasticsearch.core.*;
 import co.elastic.clients.elasticsearch.core.bulk.BulkOperation;
 import co.elastic.clients.elasticsearch.core.search.Hit;
@@ -168,7 +169,31 @@ public class ElasticSearchDemoTests {
         }
         assert hitsMetadata.total() != null;
         final long total = hitsMetadata.total().value();
-        System.out.println("ES 的 API 全量查询文档的数据总数为：" + total);
+        System.out.println("ES 的 API 全量查询的数据总数为：" + total);
+        closeClient();
+    }
+
+    @Test
+    void testPagingQueryDocument() throws IOException{
+        final SearchResponse<User> searchResponse = client.search(builder -> builder.index("user")
+                .query(q -> q.matchAll(item -> item))
+                .from(1)
+                .size(2), User.class);
+        searchResponse.hits().hits().forEach(userHit -> System.out.println("user -> " + userHit.source()));
+        assert searchResponse.hits().total() != null;
+        System.out.println("ES 的 API 分页查询的数据为：" + searchResponse.hits().hits());
+        closeClient();
+    }
+
+    @Test
+    void testSortQueryDocument() throws IOException {
+        final SearchResponse<User> searchResponse = client.search(builder -> builder.index("user")
+                .query(q -> q.matchAll(item -> item))
+                .sort(s -> s.field(f -> f.field("tel")
+                        .order(SortOrder.Desc))), User.class);
+        searchResponse.hits().hits().forEach(userHit -> System.out.println("user -> " + userHit.source()));
+        assert searchResponse.hits().total() != null;
+        System.out.println("ES 的 API 查询排序的数据为：" + searchResponse.hits().hits());
         closeClient();
     }
 
