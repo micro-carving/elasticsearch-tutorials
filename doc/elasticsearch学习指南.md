@@ -2613,6 +2613,10 @@ Content-Type: application/json
     "tel": {
       "type": "keyword",
       "index": false
+    },
+    "age": {
+      "type": "keyword",
+      "index": true
     }
   }
 }
@@ -2710,7 +2714,8 @@ Content-Type: application/json
 {
   "name":"小明",
   "sex":"男的",
-  "tel":"18312345678"
+  "tel":"18312345678",
+  "age": 20
 }
 ```
 
@@ -2819,7 +2824,8 @@ Content-Type: application/json
         "_source": {
           "name": "小明",
           "sex": "男",
-          "tel": "18312345678"
+          "tel": "18312345678",
+          "age": 20
         }
       }
     ]
@@ -2913,7 +2919,8 @@ Content-Type: application/json
         "_source": {
           "name": "小明",
           "sex": "男的",
-          "tel": "18312345678"
+          "tel": "18312345678",
+          "age": 20
         }
       }
     ]
@@ -3208,6 +3215,9 @@ Content-Type: application/json
     "aliases": {},
     "mappings": {
       "properties": {
+        "age": {
+          "type": "keyword"
+        },
         "name": {
           "type": "text"
         },
@@ -3286,7 +3296,8 @@ Content-Type: application/json
         "_source": {
           "name": "小明",
           "sex": "男的",
-          "tel": "18312345678"
+          "tel": "18312345678",
+          "age": 20
         }
       }
     ]
@@ -3307,6 +3318,7 @@ public class User {
   private String name;
   private String sex;
   private String tel;
+  private Integer age;
 }
 ```
 
@@ -3322,7 +3334,7 @@ public class ElasticSearchDemoTests {
     final CreateResponse createResponse = client.create(builder ->
             builder.index("user")
                     .id("1002")
-                    .document(new User("小芳", "女", "17712345678")));
+                    .document(new User("小芳", "女", "17712345678", 18)));
     System.out.println("ES 的 API 创建文档的响应结果为：" + createResponse.result());
     closeClient();
   }
@@ -3368,7 +3380,7 @@ public class ElasticSearchDemoTests {
 输出结果如下：
 
 ```text
-ES 的 API 查询文档的响应结果为：User(name=小芳, sex=女, tel=17712345678)
+ES 的 API 查询文档的响应结果为：User(name=小芳, sex=女, tel=17712345678, age=18)
 ```
 
 > **注意**
@@ -3445,17 +3457,17 @@ public class ElasticSearchDemoTests {
     list.add(new BulkOperation.Builder().create(
                     builder -> builder
                             .id("1003")
-                            .document(new User("小强", "男", "17812345678")))
+                            .document(new User("小强", "男", "17812345678", 30)))
             .build());
     list.add(new BulkOperation.Builder().create(
                     builder -> builder
                             .id("1004")
-                            .document(new User("晓彤", "女", "18112345678")))
+                            .document(new User("晓彤", "女", "18112345678", 18)))
             .build());
     list.add(new BulkOperation.Builder().create(
                     builder -> builder
                             .id("1005")
-                            .document(new User("小李", "男", "15512345678")))
+                            .document(new User("小李", "男", "15512345678", 65)))
             .build());
     // 调用 bulk 方法执行批量插入操作
     final BulkResponse bulkResponse = client.bulk(builder -> builder.index("user").operations(list));
@@ -3536,8 +3548,8 @@ public class ElasticSearchDemoTests {
 输出的结果如下：
 
 ```text
-user -> User(name=小明, sex=男的, tel=18312345678)
-user -> User(name=小强, sex=男, tel=17812345678)
+user -> User(name=小明, sex=男的, tel=18312345678, age=20)
+user -> User(name=小强, sex=男, tel=17812345678, age=30)
 ES 的 API 全量查询文档的数据总数为：2
 ```
 
@@ -3565,9 +3577,9 @@ public class ElasticSearchDemoTests {
 输出的结果如下：
 
 ```text
-user -> User(name=小李, sex=男, tel=15512345678)
-user -> User(name=小明, sex=男的, tel=18312345678)
-ES 的 API 分页查询文档的数据为：[Hit: {"_index":"user","_id":"1005","_score":1.0,"_type":"_doc","_source":"User(name=小李, sex=男, tel=15512345678)"}, Hit: {"_index":"user","_id":"1001","_score":1.0,"_type":"_doc","_source":"User(name=小明, sex=男的, tel=18312345678)"}]
+user -> User(name=小李, sex=男, tel=15512345678, age=65)
+user -> User(name=小明, sex=男的, tel=18312345678, age=20)
+ES 的 API 分页查询文档的数据为：[Hit: {"_index":"user","_id":"1005","_score":1.0,"_type":"_doc","_source":"User(name=小李, sex=男, tel=15512345678, age=65)"}, Hit: {"_index":"user","_id":"1001","_score":1.0,"_type":"_doc","_source":"User(name=小明, sex=男的, tel=18312345678, age=20)"}]
 ```
 
 > **注意**
@@ -3598,11 +3610,146 @@ public class ElasticSearchDemoTests {
 输出结果如下：
 
 ```text
-user -> User(name=小明, sex=男的, tel=18312345678)
-user -> User(name=晓彤, sex=女, tel=18112345678)
-user -> User(name=小强, sex=男, tel=17812345678)
-user -> User(name=小李, sex=男, tel=15512345678)
-ES 的 API 查询排序的数据为：[Hit: {"_index":"user","_id":"1001","_type":"_doc","_source":"User(name=小明, sex=男的, tel=18312345678)","sort":["18312345678"]}, Hit: {"_index":"user","_id":"1004","_type":"_doc","_source":"User(name=晓彤, sex=女, tel=18112345678)","sort":["18112345678"]}, Hit: {"_index":"user","_id":"1003","_type":"_doc","_source":"User(name=小强, sex=男, tel=17812345678)","sort":["17812345678"]}, Hit: {"_index":"user","_id":"1005","_type":"_doc","_source":"User(name=小李, sex=男, tel=15512345678)","sort":["15512345678"]}]
+user -> User(name=小明, sex=男, tel=18312345678, age=20)
+user -> User(name=晓彤, sex=女, tel=18112345678, age=18)
+user -> User(name=小强, sex=男, tel=17812345678, age=30)
+user -> User(name=小芳, sex=女, tel=17712345678, age=18)
+user -> User(name=小李, sex=男, tel=15512345678, age=65)
+ES 的 API 查询排序的数据为：[Hit: {"_index":"user","_id":"1001","_type":"_doc","_source":"User(name=小明, sex=男, tel=18312345678, age=20)","sort":["18312345678"]}, Hit: {"_index":"user","_id":"1004","_type":"_doc","_source":"User(name=晓彤, sex=女, tel=18112345678, age=18)","sort":["18112345678"]}, Hit: {"_index":"user","_id":"1003","_type":"_doc","_source":"User(name=小强, sex=男, tel=17812345678, age=30)","sort":["17812345678"]}, Hit: {"_index":"user","_id":"1002","_type":"_doc","_source":"User(name=小芳, sex=女, tel=17712345678, age=18)","sort":["17712345678"]}, Hit: {"_index":"user","_id":"1005","_type":"_doc","_source":"User(name=小李, sex=男, tel=15512345678, age=65)","sort":["15512345678"]}]
+```
+
+#### 条件查询
+
+根据 `tel` 字段**降序**，同时只显示 `name` 和 `tel` 字段，不显示 `sex` 字段，查询 “user” 索引下的数据，示例代码如下：
+
+```java
+@SpringBootTest
+public class ElasticSearchDemoTests {
+  @Test
+  void testConditionQueryDocument() throws IOException {
+    final SearchResponse<User> searchResponse = client.search(builder -> builder.index("user")
+            .query(q -> q.matchAll(item -> item))
+            .sort(s -> s.field(f -> f.field("tel").order(SortOrder.Desc)))
+            .source(f -> f.filter(item -> item.includes("name", "tel").excludes("sex"))), User.class);
+    searchResponse.hits().hits().forEach(userHit -> System.out.println("user -> " + userHit.source()));
+    assert searchResponse.hits().total() != null;
+    System.out.println("ES 的 API 条件查询的数据为：" + searchResponse.hits().hits());
+    closeClient();
+  }
+}
+```
+
+输出结果如下：
+
+```text
+user -> User(name=小明, sex=null, tel=18312345678, age=null)
+user -> User(name=晓彤, sex=null, tel=18112345678, age=null)
+user -> User(name=小强, sex=null, tel=17812345678, age=null)
+user -> User(name=小芳, sex=null, tel=17712345678, age=null)
+user -> User(name=小李, sex=null, tel=15512345678, age=null)
+ES 的 API 条件查询的数据为：[Hit: {"_index":"user","_id":"1001","_type":"_doc","_source":"User(name=小明, sex=null, tel=18312345678, age=null)","sort":["18312345678"]}, Hit: {"_index":"user","_id":"1004","_type":"_doc","_source":"User(name=晓彤, sex=null, tel=18112345678, age=null)","sort":["18112345678"]}, Hit: {"_index":"user","_id":"1003","_type":"_doc","_source":"User(name=小强, sex=null, tel=17812345678, age=null)","sort":["17812345678"]}, Hit: {"_index":"user","_id":"1002","_type":"_doc","_source":"User(name=小芳, sex=null, tel=17712345678, age=null)","sort":["17712345678"]}, Hit: {"_index":"user","_id":"1005","_type":"_doc","_source":"User(name=小李, sex=null, tel=15512345678, age=null)","sort":["15512345678"]}]
+```
+
+> **说明**
+> 
+> `includes` 是显示的字段，`excludes` 是排除的字段。
+
+#### 组合查询
+
+##### must 查询
+
+只查询 `sex` 为 ”男“ 并且 `name` 字段包含 ”小“，同时 `sex` 不为 ”女“，“user” 索引下的数据，示例代码如下：
+
+```java
+@SpringBootTest
+public class ElasticSearchDemoTests {
+  @Test
+  void testCombinationMustQueryDocument() throws IOException {
+    final SearchResponse<User> searchResponse = client.search(builder -> builder.index("user")
+            .query(q -> q.bool(b -> b.must(m -> m.match(f -> f.field("sex").query("男")))
+                    .must(m -> m.match(f -> f.field("name").query("小")))
+                    .mustNot(m -> m.match(f -> f.field("sex").query("女"))))), User.class);
+    searchResponse.hits().hits().forEach(userHit -> System.out.println("user -> " + userHit.source()));
+    assert searchResponse.hits().total() != null;
+    System.out.println("ES 的 API 组合 Must 查询的数据为：" + searchResponse.hits().hits());
+    closeClient();
+  }
+}
+```
+
+输出结果如下：
+
+```text
+user -> User(name=小明, sex=男, tel=18312345678, age=20)
+user -> User(name=小强, sex=男, tel=17812345678, age=30)
+user -> User(name=小李, sex=男, tel=15512345678, age=65)
+ES 的 API 组合 Must 查询的数据为：[Hit: {"_index":"user","_id":"1001","_score":0.8266785,"_type":"_doc","_source":"User(name=小明, sex=男, tel=18312345678, age=20)"}, Hit: {"_index":"user","_id":"1003","_score":0.8266785,"_type":"_doc","_source":"User(name=小强, sex=男, tel=17812345678, age=30)"}, Hit: {"_index":"user","_id":"1005","_score":0.8266785,"_type":"_doc","_source":"User(name=小李, sex=男, tel=15512345678, age=65)"}]
+```
+
+> **说明**
+>
+> `must` 是必须满足所有条件，相当于编程语言中的 `&&` 与条件。
+
+##### should 查询
+
+查询 `sex` 为 ”男“ 或者 `name` 字段包含 ”小“，“user” 索引下的数据，示例代码如下：
+
+```java
+@SpringBootTest
+public class ElasticSearchDemoTests {
+  @Test
+  void testCombinationShouldQueryDocument() throws IOException {
+    final SearchResponse<User> searchResponse = client.search(builder -> builder.index("user")
+            .query(q -> q.bool(b -> b.should(m -> m.match(f -> f.field("sex").query("男")))
+                    .should(m -> m.match(f -> f.field("name").query("小"))))), User.class);
+    searchResponse.hits().hits().forEach(userHit -> System.out.println("user -> " + userHit.source()));
+    assert searchResponse.hits().total() != null;
+    System.out.println("ES 的 API 组合 Should 查询的数据为：" + searchResponse.hits().hits());
+    closeClient();
+  }
+}
+```
+
+输出结果如下：
+
+```text
+user -> User(name=小明, sex=男, tel=18312345678, age=20)
+user -> User(name=小强, sex=男, tel=17812345678, age=30)
+user -> User(name=小李, sex=男, tel=15512345678, age=65)
+user -> User(name=小芳, sex=女, tel=17712345678, age=18)
+ES 的 API 组合 Should 查询的数据为：[Hit: {"_index":"user","_id":"1001","_score":0.8266785,"_type":"_doc","_source":"User(name=小明, sex=男, tel=18312345678, age=20)"}, Hit: {"_index":"user","_id":"1003","_score":0.8266785,"_type":"_doc","_source":"User(name=小强, sex=男, tel=17812345678, age=30)"}, Hit: {"_index":"user","_id":"1005","_score":0.8266785,"_type":"_doc","_source":"User(name=小李, sex=男, tel=15512345678, age=65)"}, Hit: {"_index":"user","_id":"1002","_score":0.2876821,"_type":"_doc","_source":"User(name=小芳, sex=女, tel=17712345678, age=18)"}]
+```
+
+> **说明**
+>
+> `should` 是满足条件即可，相当于编程语言中的 `||` 或条件又或者取并集。
+
+#### 范围查询
+
+查询 `age` 大于 20 岁并且 `age` 小于 45 岁，“user” 索引下的数据，示例代码如下：
+
+```java
+@SpringBootTest
+public class ElasticSearchDemoTests {
+  @Test
+  void testRangeQueryDocument() throws IOException {
+    // 范围查询，gte()表示取大于等于，gt()表示大于，lte()表示小于等于
+    final SearchResponse<User> searchResponse = client.search(builder -> builder.index("user")
+            .query(q -> q.range(r -> r.field("age").gte(JsonData.of(20)).lt(JsonData.of(45)))), User.class);
+    searchResponse.hits().hits().forEach(userHit -> System.out.println("user -> " + userHit.source()));
+    assert searchResponse.hits().total() != null;
+    System.out.println("ES 的 API 范围查询的数据为：" + searchResponse.hits().hits());
+    closeClient();
+  }
+}
+```
+
+输出结果如下：
+
+```text
+user -> User(name=小明, sex=男, tel=18312345678, age=20)
+user -> User(name=小强, sex=男, tel=17812345678, age=30)
+ES 的 API 范围查询的数据为：[Hit: {"_index":"user","_id":"1001","_score":1.0,"_type":"_doc","_source":"User(name=小明, sex=男, tel=18312345678, age=20)"}, Hit: {"_index":"user","_id":"1003","_score":1.0,"_type":"_doc","_source":"User(name=小强, sex=男, tel=17812345678, age=30)"}]
 ```
 
 # ElasticSearch 进阶

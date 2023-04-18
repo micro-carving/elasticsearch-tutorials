@@ -396,6 +396,10 @@ Content-Type: application/json
     "tel": {
       "type": "keyword",
       "index": false
+    },
+    "age": {
+      "type": "keyword",
+      "index": true
     }
   }
 }
@@ -413,7 +417,8 @@ Content-Type: application/json
 {
   "name":"小明",
   "sex":"男",
-  "tel":"18312345678"
+  "tel":"18312345678",
+  "age": 20
 }
 
 ### 修改映射数据

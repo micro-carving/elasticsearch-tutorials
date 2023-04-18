@@ -10,6 +10,7 @@ import co.elastic.clients.elasticsearch.indices.CreateIndexResponse;
 import co.elastic.clients.elasticsearch.indices.DeleteIndexResponse;
 import co.elastic.clients.elasticsearch.indices.GetIndexResponse;
 import co.elastic.clients.elasticsearch.indices.IndexState;
+import co.elastic.clients.json.JsonData;
 import co.elastic.clients.json.jackson.JacksonJsonpMapper;
 import co.elastic.clients.transport.ElasticsearchTransport;
 import co.elastic.clients.transport.endpoints.BooleanResponse;
@@ -86,7 +87,7 @@ public class ElasticSearchDemoTests {
         final CreateResponse createResponse = client.create(builder ->
                 builder.index("user")
                         .id("1002")
-                        .document(new User("小芳", "女", "17712345678")));
+                        .document(new User("小芳", "女", "17712345678", 18)));
         System.out.println("ES 的 API 创建文档的响应结果为：" + createResponse.result());
         closeClient();
     }
@@ -123,17 +124,17 @@ public class ElasticSearchDemoTests {
         list.add(new BulkOperation.Builder().create(
                 builder -> builder
                         .id("1003")
-                        .document(new User("小强", "男", "17812345678")))
+                        .document(new User("小强", "男", "17812345678", 30)))
                 .build());
         list.add(new BulkOperation.Builder().create(
                         builder -> builder
                                 .id("1004")
-                                .document(new User("晓彤", "女", "18112345678")))
+                                .document(new User("晓彤", "女", "18112345678", 18)))
                 .build());
         list.add(new BulkOperation.Builder().create(
                         builder -> builder
                                 .id("1005")
-                                .document(new User("小李", "男", "15512345678")))
+                                .document(new User("小李", "男", "15512345678", 65)))
                 .build());
         // 调用 bulk 方法执行批量插入操作
         final BulkResponse bulkResponse = client.bulk(builder -> builder.index("user").operations(list));
@@ -194,6 +195,52 @@ public class ElasticSearchDemoTests {
         searchResponse.hits().hits().forEach(userHit -> System.out.println("user -> " + userHit.source()));
         assert searchResponse.hits().total() != null;
         System.out.println("ES 的 API 查询排序的数据为：" + searchResponse.hits().hits());
+        closeClient();
+    }
+
+    @Test
+    void testConditionQueryDocument() throws IOException {
+        final SearchResponse<User> searchResponse = client.search(builder -> builder.index("user")
+                .query(q -> q.matchAll(item -> item))
+                .sort(s -> s.field(f -> f.field("tel").order(SortOrder.Desc)))
+                .source(f -> f.filter(item -> item.includes("name", "tel").excludes("sex"))), User.class);
+        searchResponse.hits().hits().forEach(userHit -> System.out.println("user -> " + userHit.source()));
+        assert searchResponse.hits().total() != null;
+        System.out.println("ES 的 API 条件查询的数据为：" + searchResponse.hits().hits());
+        closeClient();
+    }
+
+    @Test
+    void testCombinationMustQueryDocument() throws IOException {
+        final SearchResponse<User> searchResponse = client.search(builder -> builder.index("user")
+                .query(q -> q.bool(b -> b.must(m -> m.match(f -> f.field("sex").query("男")))
+                        .must(m -> m.match(f -> f.field("name").query("小")))
+                        .mustNot(m -> m.match(f -> f.field("sex").query("女"))))), User.class);
+        searchResponse.hits().hits().forEach(userHit -> System.out.println("user -> " + userHit.source()));
+        assert searchResponse.hits().total() != null;
+        System.out.println("ES 的 API 组合 Must 查询的数据为：" + searchResponse.hits().hits());
+        closeClient();
+    }
+
+    @Test
+    void testCombinationShouldQueryDocument() throws IOException {
+        final SearchResponse<User> searchResponse = client.search(builder -> builder.index("user")
+                .query(q -> q.bool(b -> b.should(m -> m.match(f -> f.field("sex").query("男")))
+                        .should(m -> m.match(f -> f.field("name").query("小"))))), User.class);
+        searchResponse.hits().hits().forEach(userHit -> System.out.println("user -> " + userHit.source()));
+        assert searchResponse.hits().total() != null;
+        System.out.println("ES 的 API 组合 Should 查询的数据为：" + searchResponse.hits().hits());
+        closeClient();
+    }
+
+    @Test
+    void testRangeQueryDocument() throws IOException {
+        // 范围查询，gte()表示取大于等于，gt()表示大于，lte()表示小于等于
+        final SearchResponse<User> searchResponse = client.search(builder -> builder.index("user")
+                .query(q -> q.range(r -> r.field("age").gte(JsonData.of(20)).lt(JsonData.of(45)))), User.class);
+        searchResponse.hits().hits().forEach(userHit -> System.out.println("user -> " + userHit.source()));
+        assert searchResponse.hits().total() != null;
+        System.out.println("ES 的 API 范围查询的数据为：" + searchResponse.hits().hits());
         closeClient();
     }
 
