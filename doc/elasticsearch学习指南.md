@@ -3752,6 +3752,54 @@ user -> User(name=小强, sex=男, tel=17812345678, age=30)
 ES 的 API 范围查询的数据为：[Hit: {"_index":"user","_id":"1001","_score":1.0,"_type":"_doc","_source":"User(name=小明, sex=男, tel=18312345678, age=20)"}, Hit: {"_index":"user","_id":"1003","_score":1.0,"_type":"_doc","_source":"User(name=小强, sex=男, tel=17812345678, age=30)"}]
 ```
 
+#### 模糊查询
+
+模糊查询 `name` 为 “小” ，“user” 索引下的数据，示例代码如下：
+
+```java
+@SpringBootTest
+public class ElasticSearchDemoTests {
+  @Test
+  void testFuzzyQueryDocument() throws IOException {
+    // 模糊查询，fuzziness 它可以被设置为 “0”，“1”，“2” 或 “auto”。“auto”是推荐的选项，它会根据查询词的长度定义距离。
+    final SearchResponse<User> searchResponse = client.search(builder -> builder.index("user")
+            .query(q -> q.fuzzy(r -> r.field("name").value("小").fuzziness("auto"))), User.class);
+    searchResponse.hits().hits().forEach(userHit -> System.out.println("user -> " + userHit.source()));
+    assert searchResponse.hits().total() != null;
+    System.out.println("ES 的 API 模糊查询的数据为：" + searchResponse.hits().hits());
+    closeClient();
+  }
+}
+```
+
+输出结果如下：
+
+```text
+user -> User(name=小明, sex=男, tel=18312345678, age=20)
+user -> User(name=小芳, sex=女, tel=17712345678, age=18)
+user -> User(name=小强, sex=男, tel=17812345678, age=30)
+user -> User(name=小李, sex=男, tel=15512345678, age=65)
+ES 的 API 模糊查询的数据为：[Hit: {"_index":"user","_id":"1001","_score":0.2876821,"_type":"_doc","_source":"User(name=小明, sex=男, tel=18312345678, age=20)"}, Hit: {"_index":"user","_id":"1002","_score":0.2876821,"_type":"_doc","_source":"User(name=小芳, sex=女, tel=17712345678, age=18)"}, Hit: {"_index":"user","_id":"1003","_score":0.2876821,"_type":"_doc","_source":"User(name=小强, sex=男, tel=17812345678, age=30)"}, Hit: {"_index":"user","_id":"1005","_score":0.2876821,"_type":"_doc","_source":"User(name=小李, sex=男, tel=15512345678, age=65)"}]
+```
+
+> **说明**
+> 
+> 在实际的搜索中，我们有时候会打错字，从而导致搜索不到。在Elasticsearch中，我们可以使用fuzziness属性来进行模糊查询，从而达到搜索有错别字的情形。
+>
+> match 查询具有 “fuzziness” 属性。它可以被设置为 “0”，“1”，“2” 或 “auto”。“auto” 是推荐的选项，它会根据查询词的长度定义距离。
+> 
+> 返回包含与搜索词相似的词的文档，以Levenshtein编辑距离测量。
+> 
+> 编辑距离是将一个术语转换为另一个术语所需的一个字符更改的次数。 这些更改可以包括：
+> 
+> - 更改字符（box→fox）
+> - 删除字符（black→lack）
+> - 插入字符（sic→sick）
+> - 转置两个相邻字符（act→cat）
+> 
+> 为了找到相似的词，模糊查询会在指定的编辑距离内创建搜索词的所有可能变化或扩展的集合。 查询然后返回每个扩展的完全匹配。
+
+
 # ElasticSearch 进阶
 
 # ElasticSearch 集成

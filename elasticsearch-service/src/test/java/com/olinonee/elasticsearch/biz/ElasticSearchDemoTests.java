@@ -244,6 +244,17 @@ public class ElasticSearchDemoTests {
         closeClient();
     }
 
+    @Test
+    void testFuzzyQueryDocument() throws IOException {
+        // 模糊查询，fuzziness 它可以被设置为 “0”，“1”，“2” 或 “auto”。“auto”是推荐的选项，它会根据查询词的长度定义距离。
+        final SearchResponse<User> searchResponse = client.search(builder -> builder.index("user")
+                .query(q -> q.fuzzy(r -> r.field("name").value("小").fuzziness("auto"))), User.class);
+        searchResponse.hits().hits().forEach(userHit -> System.out.println("user -> " + userHit.source()));
+        assert searchResponse.hits().total() != null;
+        System.out.println("ES 的 API 模糊查询的数据为：" + searchResponse.hits().hits());
+        closeClient();
+    }
+
     /**
      * 关闭传输层和客户端
      *
