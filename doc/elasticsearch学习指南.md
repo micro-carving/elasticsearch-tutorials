@@ -3799,6 +3799,45 @@ ES 的 API 模糊查询的数据为：[Hit: {"_index":"user","_id":"1001","_scor
 > 
 > 为了找到相似的词，模糊查询会在指定的编辑距离内创建搜索词的所有可能变化或扩展的集合。 查询然后返回每个扩展的完全匹配。
 
+#### 高亮查询
+
+高亮查询 `sex` 为 “女” ，“user” 索引下的数据，示例代码如下：
+
+```java
+@SpringBootTest
+public class ElasticSearchDemoTests {
+  @Test
+  void testHighlightQueryDocument() throws IOException {
+    // 对查询的字段内容进行高亮显示，preTags-设置标签前缀，postTags-设置标签后缀
+    final SearchResponse<User> searchResponse = client.search(s -> s.index("user").query(q -> q.term(t -> t.field("sex").value("女")))
+                    .highlight(h -> h.fields("sex", f -> f.preTags("<font color='red'>").postTags("</font>")))
+            , User.class);
+    searchResponse.hits().hits().forEach(userHit -> System.out.println("user -> " + userHit.source()));
+    assert searchResponse.hits().total() != null;
+    System.out.println("ES 的 API 高亮查询的数据为：" + searchResponse.hits().hits());
+    closeClient();
+  }
+}
+```
+
+输出结果如下：
+
+```text
+user -> User(name=小芳, sex=女, tel=17712345678, age=18)
+user -> User(name=晓彤, sex=女, tel=18112345678, age=18)
+ES 的 API 高亮查询的数据为：[Hit: {"_index":"user","_id":"1002","_score":0.87546873,"_type":"_doc","highlight":{"sex":["<font color='red'>女</font>"]},"_source":"User(name=小芳, sex=女, tel=17712345678, age=18)"}, Hit: {"_index":"user","_id":"1004","_score":0.87546873,"_type":"_doc","highlight":{"sex":["<font color='red'>女</font>"]},"_source":"User(name=晓彤, sex=女, tel=18112345678, age=18)"}]
+```
+
+> **说明**
+>
+> `highlight` 高亮查询方法，preTags-设置标签前缀，postTags-设置标签后缀
+
+#### 聚合查询
+
+##### 最大值查询
+
+
+
 
 # ElasticSearch 进阶
 

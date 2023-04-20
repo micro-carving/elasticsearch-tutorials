@@ -122,9 +122,9 @@ public class ElasticSearchDemoTests {
         // 构建一个批量数据集合
         List<BulkOperation> list = new ArrayList<>();
         list.add(new BulkOperation.Builder().create(
-                builder -> builder
-                        .id("1003")
-                        .document(new User("小强", "男", "17812345678", 30)))
+                        builder -> builder
+                                .id("1003")
+                                .document(new User("小强", "男", "17812345678", 30)))
                 .build());
         list.add(new BulkOperation.Builder().create(
                         builder -> builder
@@ -147,8 +147,8 @@ public class ElasticSearchDemoTests {
         // 构建一个批量数据集合
         List<BulkOperation> list = new ArrayList<>();
         list.add(new BulkOperation.Builder().delete(
-                builder -> builder
-                        .id("1004"))
+                        builder -> builder
+                                .id("1004"))
                 .build());
         list.add(new BulkOperation.Builder().delete(
                         builder -> builder
@@ -175,7 +175,7 @@ public class ElasticSearchDemoTests {
     }
 
     @Test
-    void testPagingQueryDocument() throws IOException{
+    void testPagingQueryDocument() throws IOException {
         final SearchResponse<User> searchResponse = client.search(builder -> builder.index("user")
                 .query(q -> q.matchAll(item -> item))
                 .from(1)
@@ -254,6 +254,19 @@ public class ElasticSearchDemoTests {
         System.out.println("ES 的 API 模糊查询的数据为：" + searchResponse.hits().hits());
         closeClient();
     }
+
+    @Test
+    void testHighlightQueryDocument() throws IOException {
+        // 对查询的字段内容进行高亮显示，preTags-设置标签前缀，postTags-设置标签后缀
+        final SearchResponse<User> searchResponse = client.search(s -> s.index("user").query(q -> q.term(t -> t.field("sex").value("女")))
+                        .highlight(h -> h.fields("sex", f -> f.preTags("<font color='red'>").postTags("</font>")))
+                , User.class);
+        searchResponse.hits().hits().forEach(userHit -> System.out.println("user -> " + userHit.source()));
+        assert searchResponse.hits().total() != null;
+        System.out.println("ES 的 API 高亮查询的数据为：" + searchResponse.hits().hits());
+        closeClient();
+    }
+
 
     /**
      * 关闭传输层和客户端
