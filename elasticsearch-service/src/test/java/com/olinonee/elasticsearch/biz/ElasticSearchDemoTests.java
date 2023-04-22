@@ -267,6 +267,14 @@ public class ElasticSearchDemoTests {
         closeClient();
     }
 
+    @Test
+    void testAggregateMaxQueryDocument() throws IOException {
+        // 聚合查询，取最大年龄
+        SearchResponse<User> searchResponse = client.search(s -> s.index("user").aggregations("maxAge", a -> a.max(m -> m.field("age")))
+                , User.class);
+        searchResponse.aggregations().forEach((key, value) -> System.out.println("ES 的 API 聚合查询的最大年龄（" + key + "）为：" + value.max().value() + "岁"));
+        closeClient();
+    }
 
     /**
      * 关闭传输层和客户端

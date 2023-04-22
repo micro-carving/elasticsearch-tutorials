@@ -2574,7 +2574,7 @@ Content-Type: application/json
 
 创建数据库表需要设置字段名称，类型，长度，约束等；索引库也一样，需要知道这个类型下有哪些字段，每个字段有哪些约束信息，这就叫做映射（`mapping`）。
 
-### 创建映射
+### 创建或者修改映射
 
 创建 **user** 索引，向 ES 服务器发 PUT 请求：`http://127.0.0.1:9200/user` ，请求如下：
 
@@ -2596,7 +2596,7 @@ PUT {{baseUrl}}/user
 为 **user** 索引创建新的映射，向 ES 服务器发 PUT 请求：`http://127.0.0.1:9200/user/_mapping` ，请求如下：
 
 ```http request
-### 创建映射
+### 创建或者修改映射
 PUT {{baseUrl}}/user/_mapping
 Content-Type: application/json
 
@@ -2615,7 +2615,7 @@ Content-Type: application/json
       "index": false
     },
     "age": {
-      "type": "keyword",
+      "type": "long",
       "index": true
     }
   }
@@ -3836,8 +3836,35 @@ ES 的 API 高亮查询的数据为：[Hit: {"_index":"user","_id":"1002","_scor
 
 ##### 最大值查询
 
+聚合查询 `age` 为最大年龄，“user” 索引下的数据，示例代码如下：
 
+```java
+@SpringBootTest
+public class ElasticSearchDemoTests {
+  @Test
+  void testAggregateMaxQueryDocument() throws IOException {
+    // 聚合查询，取最大年龄
+    SearchResponse<User> searchResponse = client.search(s -> s.index("user").aggregations("maxAge", a -> a.max(m -> m.field("age")))
+            , User.class);
+    searchResponse.aggregations().forEach((key, value) -> System.out.println("ES 的 API 聚合查询的最大年龄（" + key + "）为：" + value.max().value() + "岁"));
+    closeClient();
+  }
+}
+```
 
+输出结果如下：
+
+```text
+ES 的 API 聚合查询的最大年龄（maxAge）为：65.0岁
+```
+
+> **注意**
+>
+> 聚合查询时，索引的字段映射的 `type` 不能为 `keyword` ，可以为 `float`、`long`、`integer`，否则查询时会提示异常信息 “Field [age] of type [keyword] is not supported for aggregation [max]”
+
+> **说明**
+> 
+> 这里只列举最大值的查询，最小值的查询和平均值的查询可以直接把 API 中的 max 方法改成 min 方法和 avg 方法即可！
 
 # ElasticSearch 进阶
 
