@@ -276,6 +276,15 @@ public class ElasticSearchDemoTests {
         closeClient();
     }
 
+    @Test
+    void testGroupQueryDocument() throws IOException {
+        final SearchResponse<User> searchResponse = client.search(s -> s.index("user").aggregations("ageGroup",
+                a -> a.terms(t -> t.field("age"))), User.class);
+        searchResponse.aggregations().get("ageGroup").lterms().buckets().array()
+                .forEach(f -> System.out.println("ES 的 API 分组查询的年龄为（" + f.key() + "）数量为：" + f.docCount()));
+        closeClient();
+    }
+
     /**
      * 关闭传输层和客户端
      *

@@ -3866,6 +3866,37 @@ ES 的 API 聚合查询的最大年龄（maxAge）为：65.0岁
 > 
 > 这里只列举最大值的查询，最小值的查询和平均值的查询可以直接把 API 中的 max 方法改成 min 方法和 avg 方法即可！
 
+#### 分组查询
+
+对 `age` 进行分组查询，“user” 索引下的数据，示例代码如下：
+
+```java
+@SpringBootTest
+public class ElasticSearchDemoTests {
+  @Test
+  void testGroupQueryDocument() throws IOException {
+    final SearchResponse<User> searchResponse = client.search(s -> s.index("user").aggregations("ageGroup",
+            a -> a.terms(t -> t.field("age"))), User.class);
+    searchResponse.aggregations().get("ageGroup").lterms().buckets().array()
+            .forEach(f -> System.out.println("ES 的 API 分组查询的年龄为（" + f.key() + "）数量为：" + f.docCount()));
+    closeClient();
+  }
+}
+```
+
+输出结果如下：
+
+```text
+ES 的 API 分组查询的年龄为（18）数量为：2
+ES 的 API 分组查询的年龄为（20）数量为：1
+ES 的 API 分组查询的年龄为（30）数量为：1
+ES 的 API 分组查询的年龄为（65）数量为：1
+```
+
+> **说明**
+>
+> 分组查询实质上是聚合查询的一种，其实就是把聚合操作方法（比如：求最大值 `max`）换成了 `terms` 方法了。
+
 # ElasticSearch 进阶
 
 # ElasticSearch 集成
