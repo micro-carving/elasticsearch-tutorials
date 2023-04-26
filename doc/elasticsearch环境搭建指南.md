@@ -50,7 +50,7 @@ http.host: 0.0.0.0
 docker network create elastic
 
 # 启动
-docker run --name elasticsearch --net elastic -p 9200:9200 -p 9300:9300 -e "discovery.type=single-node" -e
+docker run --name elasticsearch --network elastic -p 9200:9200 -p 9300:9300 -e "discovery.type=single-node" -e
 ES_JAVA_OPTS="-Xms64m -Xmx128m" -v D:/DockerDesktop/docker-container-workspace/elastic-search/config/elasticsearch.yml:
 /usr/share/elasticsearch/config/elasticsearch.yml -v D:/DockerDesktop/docker-container-workspace/elastic-search/data:
 /usr/share/elasticsearch/data -v D:/DockerDesktop/docker-container-workspace/elastic-search/plugins:
@@ -68,7 +68,7 @@ ES_JAVA_OPTS="-Xms64m -Xmx128m" -v D:/DockerDesktop/docker-container-workspace/e
 ### 启动容器
 
 ```shell
-docker run --name kibana --net elastic -p 5601:5601 -e "ELASTICSEARCH_HOSTS=http://elasticsearch:9200" -d kibana:7.17.9
+docker run --name kibana --network elastic -p 5601:5601 -e "ELASTICSEARCH_HOSTS=http://elasticsearch:9200" -d kibana:7.17.9
 ```
 
 ### 验证是否启动成功
@@ -122,7 +122,7 @@ echo "http.host: 0.0.0.0" >> /home/你的用户名/docker/elasticsearch/config/e
 docker network create elastic
 
 # 启动 elasticsearch 容器
-docker run --name elasticsearch --net elastic -p 9200:9200 -p 9300:9300 \
+docker run --name elasticsearch --network elastic -p 9200:9200 -p 9300:9300 \
 -e "discovery.type=single-node" \
 -e ES_JAVA_OPTS="-Xms64m -Xmx128m" \
 -v /home/你的用户名/docker/elasticsearch/config/elasticsearch.yml:/usr/share/elasticsearch/config/elasticsearch.yml \
@@ -131,7 +131,7 @@ docker run --name elasticsearch --net elastic -p 9200:9200 -p 9300:9300 \
 -d elasticsearch:7.17.9
 
 # 启动 kibana 容器
-docker run --name kibana --net elastic -p 5601:5601 -e "ELASTICSEARCH_HOSTS=http://elasticsearch:9200" -d kibana:7.17.9
+docker run --name kibana --network elastic -p 5601:5601 -e "ELASTICSEARCH_HOSTS=http://elasticsearch:9200" -d kibana:7.17.9
 
 # 停止容器
 docker stop elasticsearch
