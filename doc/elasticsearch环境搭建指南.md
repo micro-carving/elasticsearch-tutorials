@@ -57,6 +57,12 @@ ES_JAVA_OPTS="-Xms64m -Xmx128m" -v D:/DockerDesktop/docker-container-workspace/e
 /usr/share/elasticsearch/plugins -d elasticsearch:7.17.9
 ```
 
+### 将 elasticsearch 容器设置为自启动
+
+```shell
+docker update --restart=always elasticsearch
+```
+
 ### 验证启动是否成功
 
 在浏览器输入 [http://127.0.0.1:9200/](http://127.0.0.1:9200/)，出现如下图所示表示启动成功！
@@ -69,6 +75,12 @@ ES_JAVA_OPTS="-Xms64m -Xmx128m" -v D:/DockerDesktop/docker-container-workspace/e
 
 ```shell
 docker run --name kibana --network elastic -p 5601:5601 -e "ELASTICSEARCH_HOSTS=http://elasticsearch:9200" -d kibana:7.17.9
+```
+
+### 将 kibana 容器设置为自启动
+
+```shell
+docker update --restart=always kibana
 ```
 
 ### 验证是否启动成功
@@ -130,8 +142,14 @@ docker run --name elasticsearch --network elastic -p 9200:9200 -p 9300:9300 \
 -v /home/你的用户名/docker/elasticsearch/plugins:/usr/share/elasticsearch/plugins \
 -d elasticsearch:7.17.9
 
+# 将 elasticsearch 容器设置为自启动
+docker update --restart=always elasticsearch
+
 # 启动 kibana 容器
 docker run --name kibana --network elastic -p 5601:5601 -e "ELASTICSEARCH_HOSTS=http://elasticsearch:9200" -d kibana:7.17.9
+
+# 将 kibana 容器设置为自启动
+docker update --restart=always kibana
 
 # 停止容器
 docker stop elasticsearch
