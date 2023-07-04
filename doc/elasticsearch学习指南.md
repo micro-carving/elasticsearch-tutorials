@@ -669,7 +669,7 @@ POST /index_name/_bulk
 
 如下图所示：
 
-![kibana的dev_tools控制台测试bulk新增文档数据](./assets/kibana的dev_tools控制台测试bulk新增文档数据.png)
+![kibana的dev_tools控制台测试bulk批量新增文档数据](./assets/kibana的dev_tools控制台测试bulk批量新增文档数据.png)
 
 ![Apifox测试bulk新增文档数据](./assets/Apifox测试bulk新增文档数据.png)
 
